@@ -132,6 +132,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     final playerState = ref.watch(playerControllerProvider);
     final ambianceScene = ref.watch(ambianceControllerProvider);
     final ambianceVideo = ref.read(ambianceControllerProvider.notifier).videoController;
+    final displayMode = ref.watch(settingsControllerProvider).displayMode;
+
+    // "Ничего" hides all text and drops the blur/scrim so the raw video shows.
+    final showScrim = displayMode != DisplayMode.none;
 
     return FractionallySizedBox(
       heightFactor: 0.93,
@@ -164,7 +168,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     );
                   },
                 ),
-              if (ambianceScene != null)
+              if (ambianceScene != null && showScrim)
                 Positioned.fill(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
@@ -288,7 +292,7 @@ class _PlayerContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Column(
               children: [
-                if (displayMode != DisplayMode.transliteration)
+                if (displayMode == DisplayMode.arabic || displayMode == DisplayMode.both)
                   Text(
                     '${ayah.textArabic} ﴿${ayah.numberInSurah}﴾',
                     textAlign: TextAlign.center,
@@ -296,7 +300,8 @@ class _PlayerContent extends ConsumerWidget {
                     style: AppTextStyles.arabic.copyWith(color: primaryText),
                   ),
                 if (displayMode == DisplayMode.both) const SizedBox(height: 12),
-                if (displayMode != DisplayMode.arabic && ayah.textTransliteration != null)
+                if ((displayMode == DisplayMode.transliteration || displayMode == DisplayMode.both) &&
+                    ayah.textTransliteration != null)
                   Text(
                     ayah.textTransliteration!,
                     textAlign: TextAlign.center,
@@ -377,17 +382,12 @@ class _PlayerContent extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(Icons.volume_up_rounded, color: secondaryText, size: 20),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                onPressed: () {
-                  final next = switch (displayMode) {
-                    DisplayMode.arabic => DisplayMode.transliteration,
-                    DisplayMode.transliteration => DisplayMode.both,
-                    DisplayMode.both => DisplayMode.arabic,
-                  };
-                  ref.read(settingsControllerProvider.notifier).setDisplayMode(next);
-                },
-                icon: Icon(Icons.translate_rounded, color: secondaryText, size: 20),
+              Builder(
+                builder: (btnContext) => IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _showDisplayModeMenu(btnContext, ref, displayMode),
+                  icon: Icon(Icons.translate_rounded, color: secondaryText, size: 20),
+                ),
               ),
               _AmbianceToggle(scene: AmbianceScene.rain),
               IconButton(
@@ -400,6 +400,61 @@ class _PlayerContent extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+/// Small popover ("island") shown above the translate button letting the user
+/// pick what recitation text to display — or hide it entirely to reveal the
+/// ambient video background.
+Future<void> _showDisplayModeMenu(BuildContext context, WidgetRef ref, DisplayMode current) async {
+  final button = context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  PopupMenuItem<DisplayMode> item(DisplayMode mode, String label) => PopupMenuItem<DisplayMode>(
+        value: mode,
+        height: 44,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              child: current == mode
+                  ? const Icon(Icons.check_rounded, size: 18, color: SoftPalette.primary)
+                  : null,
+            ),
+            Text(
+              label,
+              style: AppTextStyles.body.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: current == mode ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  final selected = await showMenu<DisplayMode>(
+    context: context,
+    position: position,
+    color: SoftPalette.surface,
+    elevation: 8,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    items: [
+      item(DisplayMode.arabic, 'Арабский'),
+      item(DisplayMode.both, 'Арабский + Транскрипция'),
+      item(DisplayMode.transliteration, 'Транскрипция'),
+      item(DisplayMode.none, 'Ничего'),
+    ],
+  );
+
+  if (selected != null) {
+    ref.read(settingsControllerProvider.notifier).setDisplayMode(selected);
   }
 }
 

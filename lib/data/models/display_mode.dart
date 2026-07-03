@@ -10,4 +10,6 @@ enum DisplayMode {
   transliteration,
   @HiveField(2)
   both,
+  @HiveField(3)
+  none,
 }

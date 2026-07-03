@@ -19,6 +19,8 @@ class DisplayModeAdapter extends TypeAdapter<DisplayMode> {
         return DisplayMode.transliteration;
       case 2:
         return DisplayMode.both;
+      case 3:
+        return DisplayMode.none;
       default:
         return DisplayMode.arabic;
     }
@@ -35,6 +37,9 @@ class DisplayModeAdapter extends TypeAdapter<DisplayMode> {
         break;
       case DisplayMode.both:
         writer.writeByte(2);
+        break;
+      case DisplayMode.none:
+        writer.writeByte(3);
         break;
     }
   }
