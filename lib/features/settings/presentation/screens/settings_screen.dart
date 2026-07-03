@@ -6,19 +6,19 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/display_mode.dart';
 import '../../../../data/providers.dart';
 import '../../../home/providers/prayer_times_provider.dart';
 import '../../providers/settings_provider.dart';
-
-/// Not configured yet — the user asked for a placeholder until they supply a
-/// real donation link (Kaspi / PayPal / Patreon / crypto wallet, etc.).
-const _donateUrl = '';
+import 'sadaqa_screen.dart';
 
 /// Not configured yet — fill in once the app is published to a store.
 const _storeUrl = '';
+
+const _gold = Color(0xFFE0A83F);
+const _danger = Color(0xFFE0574B);
 
 String _formatPlaybackSpeed(double speed) {
   final fixed = speed.toStringAsFixed(speed == speed.roundToDouble() ? 0 : 2);
@@ -50,109 +50,118 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
-        children: [
-          const Text('Настройки', style: AppTextStyles.displayTitle),
-          const SizedBox(height: 28),
+    return Container(
+      color: SoftPalette.background,
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
+          children: [
+            Text(
+              'Настройки',
+              style: AppTextStyles.displayTitle.copyWith(
+                color: SoftPalette.textDark,
+              ),
+            ),
+            const SizedBox(height: 24),
 
-          const Text('ЧТЕНИЕ', style: AppTextStyles.overline),
-          const SizedBox(height: 8),
-          _ReadingSettingsCard(
-            displayMode: settings.displayMode,
-            playbackSpeed: settings.playbackSpeed,
-            onDisplayModeChanged: controller.setDisplayMode,
-            onPlaybackSpeedChanged: controller.setPlaybackSpeed,
-          ),
+            const _SectionLabel('ЧТЕНИЕ'),
+            _ReadingSettingsCard(
+              displayMode: settings.displayMode,
+              playbackSpeed: settings.playbackSpeed,
+              onDisplayModeChanged: controller.setDisplayMode,
+              onPlaybackSpeedChanged: controller.setPlaybackSpeed,
+            ),
 
-          const SizedBox(height: 24),
-          const Text('УВЕДОМЛЕНИЯ', style: AppTextStyles.overline),
-          const SizedBox(height: 8),
-          const _SectionCard(child: _NotificationsRow()),
+            const SizedBox(height: 22),
+            const _SectionLabel('УВЕДОМЛЕНИЯ'),
+            const _SettingsCard(child: _NotificationsRow()),
 
-          const SizedBox(height: 24),
-          const Text('ХРАНИЛИЩЕ', style: AppTextStyles.overline),
-          const SizedBox(height: 8),
-          const _SectionCard(child: _CacheManagementRow()),
+            const SizedBox(height: 22),
+            const _SectionLabel('ХРАНИЛИЩЕ'),
+            const _SettingsCard(child: _CacheManagementRow()),
 
-          const SizedBox(height: 24),
-          const Text('ПОДДЕРЖКА ПРОЕКТА', style: AppTextStyles.overline),
-          const SizedBox(height: 8),
-          _SectionCard(
-            child: Column(
-              children: [
-                _SettingsRow(
-                  icon: FlutterIslamicIcons.zakat,
-                  iconColor: AppColors.warning,
-                  title: 'Сделать садака',
-                  subtitle: 'Поддержать труд команды — по желанию',
-                  trailing: const Icon(
-                    Iconsax.arrow_right_3,
-                    color: AppColors.textTertiary,
-                  ),
-                  onTap: () => _openOrNotify(
-                    context,
-                    _donateUrl,
-                    emptyMessage:
-                        'Приложение бесплатно. Ссылка для садака скоро появится',
-                  ),
-                ),
-                const Divider(height: 1, indent: 60, endIndent: 16),
-                _SettingsRow(
-                  icon: Iconsax.export,
-                  iconColor: AppColors.accent,
-                  title: 'Поделиться приложением',
-                  trailing: const Icon(
-                    Iconsax.arrow_right_3,
-                    color: AppColors.textTertiary,
-                  ),
-                  onTap: () => SharePlus.instance.share(
-                    ShareParams(
-                      text:
-                          'Hifz — бесплатное приложение для заучивания Корана на слух. '
-                          'Без рекламы, без подписок.',
+            const SizedBox(height: 22),
+            const _SectionLabel('ПОДДЕРЖКА ПРОЕКТА'),
+            _SettingsCard(
+              child: Column(
+                children: [
+                  _SettingsRow(
+                    icon: FlutterIslamicIcons.zakat,
+                    iconColor: _gold,
+                    title: 'Сделать садака',
+                    subtitle: 'Поддержать труд команды — по желанию',
+                    trailing: const Icon(
+                      Iconsax.arrow_right_3,
+                      color: SoftPalette.textSecondary,
+                      size: 18,
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SadaqaScreen(),
+                      ),
                     ),
                   ),
-                ),
-                const Divider(height: 1, indent: 60, endIndent: 16),
-                _SettingsRow(
-                  icon: Iconsax.star1,
-                  iconColor: AppColors.success,
-                  title: 'Оценить приложение',
-                  trailing: const Icon(
-                    Iconsax.arrow_right_3,
-                    color: AppColors.textTertiary,
+                  const _RowDivider(),
+                  _SettingsRow(
+                    icon: Iconsax.export,
+                    iconColor: SoftPalette.primary,
+                    title: 'Поделиться приложением',
+                    trailing: const Icon(
+                      Iconsax.arrow_right_3,
+                      color: SoftPalette.textSecondary,
+                      size: 18,
+                    ),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(
+                        text:
+                            'Hifz — бесплатное приложение для заучивания Корана на слух. '
+                            'Без рекламы, без подписок.',
+                      ),
+                    ),
                   ),
-                  onTap: () => _openOrNotify(
-                    context,
-                    _storeUrl,
-                    emptyMessage: 'Приложение пока не опубликовано в сторе',
+                  const _RowDivider(),
+                  _SettingsRow(
+                    icon: Iconsax.star1,
+                    iconColor: _gold,
+                    title: 'Оценить приложение',
+                    trailing: const Icon(
+                      Iconsax.arrow_right_3,
+                      color: SoftPalette.textSecondary,
+                      size: 18,
+                    ),
+                    onTap: () => _openOrNotify(
+                      context,
+                      _storeUrl,
+                      emptyMessage: 'Приложение пока не опубликовано в сторе',
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 24),
-          const Text('О ПРИЛОЖЕНИИ', style: AppTextStyles.overline),
-          const SizedBox(height: 8),
-          const _SectionCard(
-            child: Column(
-              children: [
-                _VersionRow(),
-                Divider(height: 1, indent: 60, endIndent: 16),
-                _SettingsRow(
-                  icon: Iconsax.moon,
-                  iconColor: AppColors.textSecondary,
-                  title: 'Тёмная тема',
-                  subtitle: 'Светлая появится позже',
-                  trailing: Switch(value: true, onChanged: null),
-                ),
-              ],
+            const SizedBox(height: 22),
+            const _SectionLabel('О ПРИЛОЖЕНИИ'),
+            const _SettingsCard(
+              child: Column(
+                children: [
+                  _VersionRow(),
+                  _RowDivider(),
+                  _SettingsRow(
+                    icon: Iconsax.moon,
+                    iconColor: SoftPalette.textSecondary,
+                    title: 'Тёмная тема',
+                    subtitle: 'Светлая появится позже',
+                    trailing: Switch(
+                      value: true,
+                      onChanged: null,
+                      activeThumbColor: SoftPalette.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -173,91 +182,88 @@ class _ReadingSettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SectionCard(
+    return _SettingsCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ReadingSettingHeader(
+            const _MiniHeader(
               icon: Iconsax.translate,
               title: 'Отображение текста',
-              iconColor: AppColors.accent,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _DisplayModeSwitcher(
               current: displayMode,
               onChanged: onDisplayModeChanged,
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const _MiniHeader(
+                  icon: Iconsax.speedometer,
+                  title: 'Скорость по умолчанию',
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SoftPalette.light,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _formatPlaybackSpeed(playbackSpeed),
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 4,
+                activeTrackColor: SoftPalette.primary,
+                inactiveTrackColor: SoftPalette.track,
+                thumbColor: SoftPalette.primary,
+                overlayColor: SoftPalette.primary.withValues(alpha: 0.12),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
               ),
-              child: Column(
+              child: Slider(
+                value: playbackSpeed,
+                min: 0.5,
+                max: 2.0,
+                divisions: 6,
+                onChanged: onPlaybackSpeedChanged,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const _ReadingSettingHeader(
-                        icon: Iconsax.speedometer,
-                        title: 'Скорость по умолчанию',
-                        iconColor: AppColors.accent,
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: AppColors.accent.withValues(alpha: 0.20),
-                          ),
-                        ),
-                        child: Text(
-                          _formatPlaybackSpeed(playbackSpeed),
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 7,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 16,
-                      ),
-                    ),
-                    child: Slider(
-                      value: playbackSpeed,
-                      min: 0.5,
-                      max: 2.0,
-                      divisions: 6,
-                      activeColor: AppColors.accent,
-                      inactiveColor: AppColors.trackInactive,
-                      onChanged: onPlaybackSpeedChanged,
+                  Text(
+                    '0.5x',
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('0.5x', style: AppTextStyles.caption),
-                        Text('обычно', style: AppTextStyles.caption),
-                        Text('2x', style: AppTextStyles.caption),
-                      ],
+                  Text(
+                    'обычно',
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '2x',
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
                     ),
                   ),
                 ],
@@ -270,34 +276,26 @@ class _ReadingSettingsCard extends StatelessWidget {
   }
 }
 
-class _ReadingSettingHeader extends StatelessWidget {
-  const _ReadingSettingHeader({
-    required this.icon,
-    required this.title,
-    required this.iconColor,
-  });
+class _MiniHeader extends StatelessWidget {
+  const _MiniHeader({required this.icon, required this.title});
 
   final IconData icon;
   final String title;
-  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.14),
-            shape: BoxShape.circle,
+        Icon(icon, color: SoftPalette.primary, size: 18),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: AppTextStyles.body.copyWith(
+            color: SoftPalette.textDark,
+            fontWeight: FontWeight.w700,
           ),
-          child: Icon(icon, color: iconColor, size: 15),
         ),
-        const SizedBox(width: 9),
-        Text(title, style: AppTextStyles.body),
       ],
     );
   }
@@ -316,30 +314,19 @@ class _DisplayModeSwitcher extends StatelessWidget {
         child: GestureDetector(
           onTap: () => onChanged(mode),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 11),
             decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.accent
-                  : Colors.white.withValues(alpha: 0.02),
-              borderRadius: BorderRadius.circular(11),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.28),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                  : null,
+              color: selected ? SoftPalette.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(13),
             ),
             alignment: Alignment.center,
             child: Text(
               label,
               style: AppTextStyles.caption.copyWith(
-                color: selected ? Colors.white : AppColors.textSecondary,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? Colors.white : SoftPalette.textSecondary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -350,9 +337,8 @@ class _DisplayModeSwitcher extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: SoftPalette.light,
+        borderRadius: BorderRadius.circular(17),
       ),
       child: Row(
         children: [
@@ -420,7 +406,7 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
 
     return _SettingsRow(
       icon: Iconsax.notification,
-      iconColor: AppColors.accent,
+      iconColor: SoftPalette.primary,
       title: 'Напоминания',
       subtitle: 'Намазы и ежечасные аяты о покаянии',
       trailing: _busy
@@ -429,10 +415,14 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.accent,
+                color: SoftPalette.primary,
               ),
             )
-          : Switch(value: enabled, onChanged: _onChanged),
+          : Switch(
+              value: enabled,
+              onChanged: _onChanged,
+              activeThumbColor: SoftPalette.primary,
+            ),
     );
   }
 }
@@ -468,8 +458,8 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
   @override
   Widget build(BuildContext context) {
     return _SettingsRow(
-      icon: Iconsax.tick_circle,
-      iconColor: AppColors.accent,
+      icon: Iconsax.music_play,
+      iconColor: SoftPalette.primary,
       title: 'Скачанные аяты',
       subtitle: _bytes == null ? 'Подсчёт…' : _format(_bytes!),
       trailing: _clearing
@@ -478,7 +468,7 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.accent,
+                color: SoftPalette.primary,
               ),
             )
           : TextButton(
@@ -490,7 +480,7 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
               },
               child: const Text(
                 'Очистить',
-                style: TextStyle(color: AppColors.error),
+                style: TextStyle(color: _danger, fontWeight: FontWeight.w700),
               ),
             ),
     );
@@ -511,9 +501,14 @@ class _VersionRow extends StatelessWidget {
             : '${info.version} (${info.buildNumber})';
         return _SettingsRow(
           icon: Iconsax.info_circle,
-          iconColor: AppColors.textSecondary,
+          iconColor: SoftPalette.textSecondary,
           title: 'Версия',
-          trailing: Text(value, style: AppTextStyles.caption),
+          trailing: Text(
+            value,
+            style: AppTextStyles.caption.copyWith(
+              color: SoftPalette.textSecondary,
+            ),
+          ),
         );
       },
     );
@@ -546,24 +541,35 @@ class _SettingsRow extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.16),
+                color: iconColor.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: iconColor, size: 17),
+              child: Icon(icon, color: iconColor, size: 19),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.body),
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      color: SoftPalette.textDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(subtitle!, style: AppTextStyles.caption),
+                    Text(
+                      subtitle!,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -576,17 +582,56 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      indent: 70,
+      endIndent: 16,
+      color: SoftPalette.track,
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 10),
+      child: Text(
+        text,
+        style: AppTextStyles.overline.copyWith(
+          color: SoftPalette.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.child});
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceElevated,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: child,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: SoftPalette.softShadow(),
+      ),
+      child: Material(
+        color: SoftPalette.surface,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
     );
   }
 }
