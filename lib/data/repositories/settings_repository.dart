@@ -6,5 +6,6 @@ class SettingsRepository {
 
   AppSettings get() => HiveBoxes.settings.get(_key) ?? const AppSettings();
 
-  Future<void> save(AppSettings settings) => HiveBoxes.settings.put(_key, settings);
+  Future<void> save(AppSettings settings) =>
+      HiveBoxes.settings.put(_key, settings);
 }

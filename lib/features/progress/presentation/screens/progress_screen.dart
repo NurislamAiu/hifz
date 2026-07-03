@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/providers.dart';
@@ -30,6 +31,7 @@ class ProgressScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final overall = ref.watch(overallProgressProvider);
     final tab = ref.watch(_progressTabProvider);
     final surahsAsync = ref.watch(surahsProvider);
@@ -55,8 +57,10 @@ class ProgressScreen extends ConsumerWidget {
               const SizedBox(width: 8),
             ],
             Text(
-              'Статистика',
-              style: AppTextStyles.displayTitle.copyWith(color: SoftPalette.textDark),
+              s.progress,
+              style: AppTextStyles.displayTitle.copyWith(
+                color: SoftPalette.textDark,
+              ),
             ),
           ],
         ),
@@ -71,16 +75,16 @@ class ProgressScreen extends ConsumerWidget {
             Expanded(
               child: _StatChip(
                 icon: Iconsax.candle,
-                value: '$streak дн',
-                label: 'Стрик',
+                value: s.daysShort(streak),
+                label: s.streak,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _StatChip(
                 icon: Iconsax.cup,
-                value: '$record дн',
-                label: 'Рекорд',
+                value: s.daysShort(record),
+                label: s.record,
               ),
             ),
             const SizedBox(width: 12),
@@ -88,7 +92,7 @@ class ProgressScreen extends ConsumerWidget {
               child: _StatChip(
                 icon: FlutterIslamicIcons.calendar,
                 value: '$totalDays',
-                label: 'Дней всего',
+                label: s.totalDays,
               ),
             ),
           ],
@@ -124,8 +128,9 @@ class ProgressScreen extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
         child: _SearchField(
-          hint: tab == _ProgressTab.surahs ? 'Поиск суры' : 'Поиск джуза',
-          onChanged: (v) => ref.read(_statsSearchQueryProvider.notifier).state = v,
+          hint: tab == _ProgressTab.surahs ? s.searchSurah : s.searchJuz,
+          onChanged: (v) =>
+              ref.read(_statsSearchQueryProvider.notifier).state = v,
         ),
       ),
     );
@@ -143,7 +148,9 @@ class ProgressScreen extends ConsumerWidget {
               child: Center(
                 child: Text(
                   '$e',
-                  style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                  style: AppTextStyles.caption.copyWith(
+                    color: SoftPalette.textSecondary,
+                  ),
                 ),
               ),
             ),
@@ -151,29 +158,36 @@ class ProgressScreen extends ConsumerWidget {
               final filtered = query.isEmpty
                   ? surahs
                   : surahs
-                      .where((s) =>
-                          s.nameTransliteration.toLowerCase().contains(query) ||
-                          s.nameArabic.contains(query) ||
-                          s.number.toString() == query)
-                      .toList();
+                        .where(
+                          (s) =>
+                              s.nameTransliteration.toLowerCase().contains(
+                                query,
+                              ) ||
+                              s.nameArabic.contains(query) ||
+                              s.number.toString() == query,
+                        )
+                        .toList();
               if (filtered.isEmpty) return const _EmptySearchResult();
               return _ProgressSliverList(
                 itemCount: filtered.length,
                 itemBuilder: (context, i) {
                   final surah = filtered[i];
                   final percent = ref.watch(
-                    surahProgressPercentProvider((surah.number, surah.numberOfAyahs)),
+                    surahProgressPercentProvider((
+                      surah.number,
+                      surah.numberOfAyahs,
+                    )),
                   );
                   return _ProgressRow(
                     title: '${surah.number}. ${surah.nameTransliteration}',
-                    subtitle: '${surah.numberOfAyahs} аятов',
+                    subtitle: s.ayahCount(surah.numberOfAyahs),
                     percent: percent,
                   );
                 },
               );
             },
           )
-        : _buildJuzList(query: query, juzProgress: juzProgress);
+        : _buildJuzList(query: query, juzProgress: juzProgress, strings: s);
 
     final content = SafeArea(
       child: CustomScrollView(
@@ -203,18 +217,29 @@ class ProgressScreen extends ConsumerWidget {
   }
 }
 
-Widget _buildJuzList({required String query, required Map<int, double> juzProgress}) {
+Widget _buildJuzList({
+  required String query,
+  required Map<int, double> juzProgress,
+  required AppStrings strings,
+}) {
   final allJuz = List.generate(30, (i) => i + 1);
   final filtered = query.isEmpty
       ? allJuz
-      : allJuz.where((juz) => 'джуз $juz'.contains(query) || juz.toString() == query).toList();
+      : allJuz.where((juz) {
+          final title = strings.juz(juz).toLowerCase();
+          return title.contains(query) || juz.toString() == query;
+        }).toList();
   if (filtered.isEmpty) return const _EmptySearchResult();
   return _ProgressSliverList(
     itemCount: filtered.length,
     itemBuilder: (context, i) {
       final juz = filtered[i];
       final percent = juzProgress[juz] ?? 0;
-      return _ProgressRow(title: 'Джуз $juz', subtitle: null, percent: percent);
+      return _ProgressRow(
+        title: strings.juz(juz),
+        subtitle: null,
+        percent: percent,
+      );
     },
   );
 }
@@ -230,8 +255,10 @@ class _EmptySearchResult extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Center(
           child: Text(
-            'Ничего не найдено',
-            style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+            context.s.nothingFound,
+            style: AppTextStyles.caption.copyWith(
+              color: SoftPalette.textSecondary,
+            ),
           ),
         ),
       ),
@@ -258,8 +285,14 @@ class _SearchField extends StatelessWidget {
         cursorColor: SoftPalette.primary,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
-          prefixIcon: const Icon(Iconsax.search_normal_1, color: SoftPalette.primary, size: 20),
+          hintStyle: AppTextStyles.caption.copyWith(
+            color: SoftPalette.textSecondary,
+          ),
+          prefixIcon: const Icon(
+            Iconsax.search_normal_1,
+            color: SoftPalette.primary,
+            size: 20,
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
@@ -272,7 +305,10 @@ class _SearchField extends StatelessWidget {
 /// `ListView.separated` but lives inside the outer [CustomScrollView] so the
 /// whole screen (header + heatmap + list) scrolls as one.
 class _ProgressSliverList extends StatelessWidget {
-  const _ProgressSliverList({required this.itemCount, required this.itemBuilder});
+  const _ProgressSliverList({
+    required this.itemCount,
+    required this.itemBuilder,
+  });
   final int itemCount;
   final Widget Function(BuildContext, int) itemBuilder;
 
@@ -319,7 +355,11 @@ class _BackButton extends StatelessWidget {
 }
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.icon, required this.value, required this.label});
+  const _StatChip({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
   final IconData icon;
   final String value;
   final String label;
@@ -339,12 +379,18 @@ class _StatChip extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.title.copyWith(fontSize: 15, color: SoftPalette.primary),
+            style: AppTextStyles.title.copyWith(
+              fontSize: 15,
+              color: SoftPalette.primary,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary, fontSize: 11),
+            style: AppTextStyles.caption.copyWith(
+              color: SoftPalette.textSecondary,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -379,10 +425,14 @@ class _YearHeatmap extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(FlutterIslamicIcons.calendar, size: 16, color: SoftPalette.primary),
+              const Icon(
+                FlutterIslamicIcons.calendar,
+                size: 16,
+                color: SoftPalette.primary,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Обзор за ${days.length} дней',
+                context.s.overviewDays(days.length),
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -404,8 +454,14 @@ class _YearHeatmap extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Слушали $activeDays из ${days.length} дн. — ${(percent * 100).round()}%',
-            style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+            context.s.activeDaysSummary(
+              activeDays,
+              days.length,
+              (percent * 100).round(),
+            ),
+            style: AppTextStyles.caption.copyWith(
+              color: SoftPalette.textSecondary,
+            ),
           ),
         ],
       ),
@@ -422,11 +478,18 @@ class _HeatCell extends StatelessWidget {
     final clamped = intensity.clamp(0.0, 1.0);
     final color = clamped <= 0
         ? SoftPalette.track
-        : Color.lerp(SoftPalette.light, SoftPalette.primary, clamped.clamp(0.25, 1.0))!;
+        : Color.lerp(
+            SoftPalette.light,
+            SoftPalette.primary,
+            clamped.clamp(0.25, 1.0),
+          )!;
     return Container(
       width: 13,
       height: 13,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(3),
+      ),
     );
   }
 }
@@ -494,7 +557,7 @@ class _OverallProgressCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Прогресс по всему Корану',
+                          context.s.wholeQuranProgress,
                           style: AppTextStyles.body.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
@@ -503,7 +566,7 @@ class _OverallProgressCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Заучено $memorized из 6236 аятов',
+                          context.s.memorizedAyahs(memorized),
                           style: AppTextStyles.caption.copyWith(
                             color: Colors.white.withValues(alpha: 0.85),
                           ),
@@ -561,8 +624,8 @@ class _TabSwitcher extends StatelessWidget {
       ),
       child: Row(
         children: [
-          tabButton('По сурам', _ProgressTab.surahs),
-          tabButton('По джузам', _ProgressTab.juz),
+          tabButton(context.s.bySurahs, _ProgressTab.surahs),
+          tabButton(context.s.byJuz, _ProgressTab.juz),
         ],
       ),
     );

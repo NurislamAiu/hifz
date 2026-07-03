@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../settings/providers/settings_provider.dart';
@@ -26,14 +27,19 @@ class ReciterListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final selectedId = ref.watch(settingsControllerProvider).reciterId;
     final query = ref.watch(_reciterSearchQueryProvider).trim().toLowerCase();
 
     final reciters = query.isEmpty
         ? AppConstants.reciters
         : AppConstants.reciters
-            .where((r) => r.name.toLowerCase().contains(query) || r.nameArabic.contains(query))
-            .toList();
+              .where(
+                (r) =>
+                    r.name.toLowerCase().contains(query) ||
+                    r.nameArabic.contains(query),
+              )
+              .toList();
 
     return Container(
       width: double.infinity,
@@ -46,35 +52,42 @@ class ReciterListScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               child: Text(
-                'Чтецы',
-                style: AppTextStyles.displayTitle.copyWith(color: SoftPalette.textDark),
+                s.reciters,
+                style: AppTextStyles.displayTitle.copyWith(
+                  color: SoftPalette.textDark,
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
               child: Text(
-                'Выберите чтеца, чтобы открыть список сур',
-                style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                s.chooseReciter,
+                style: AppTextStyles.caption.copyWith(
+                  color: SoftPalette.textSecondary,
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: _SearchField(
-                onChanged: (v) => ref.read(_reciterSearchQueryProvider.notifier).state = v,
+                onChanged: (v) =>
+                    ref.read(_reciterSearchQueryProvider.notifier).state = v,
               ),
             ),
             Expanded(
               child: reciters.isEmpty
                   ? Center(
                       child: Text(
-                        'Ничего не найдено',
-                        style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                        s.nothingFound,
+                        style: AppTextStyles.caption.copyWith(
+                          color: SoftPalette.textSecondary,
+                        ),
                       ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                       itemCount: reciters.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, i) {
                         final reciter = reciters[i];
                         final isSelected = reciter.id == selectedId;
@@ -84,9 +97,13 @@ class ReciterListScreen extends ConsumerWidget {
                           isSelected: isSelected,
                           avatarColor: color,
                           onTap: () {
-                            ref.read(settingsControllerProvider.notifier).setReciter(reciter.id);
+                            ref
+                                .read(settingsControllerProvider.notifier)
+                                .setReciter(reciter.id);
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const SurahsBrowseScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const SurahsBrowseScreen(),
+                              ),
                             );
                           },
                         );
@@ -124,7 +141,9 @@ class _ReciterTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: SoftPalette.surface,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? Border.all(color: SoftPalette.primary, width: 1.6) : null,
+          border: isSelected
+              ? Border.all(color: SoftPalette.primary, width: 1.6)
+              : null,
           boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 6, blur: 14),
         ),
         child: Row(
@@ -144,7 +163,11 @@ class _ReciterTile extends StatelessWidget {
               ),
               child: Text(
                 reciter.name.substring(0, 1),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
             const SizedBox(width: 14),
@@ -175,8 +198,12 @@ class _ReciterTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    reciter.bio,
-                    style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                    context.s.reciterBio(reciter.id).isEmpty
+                        ? reciter.bio
+                        : context.s.reciterBio(reciter.id),
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -185,9 +212,16 @@ class _ReciterTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (isSelected)
-              const Icon(Iconsax.tick_circle, color: SoftPalette.primary, size: 22)
+              const Icon(
+                Iconsax.tick_circle,
+                color: SoftPalette.primary,
+                size: 22,
+              )
             else
-              const Icon(Iconsax.arrow_right_3, color: SoftPalette.textSecondary),
+              const Icon(
+                Iconsax.arrow_right_3,
+                color: SoftPalette.textSecondary,
+              ),
           ],
         ),
       ),
@@ -212,9 +246,15 @@ class _SearchField extends StatelessWidget {
         style: AppTextStyles.body.copyWith(color: SoftPalette.textDark),
         cursorColor: SoftPalette.primary,
         decoration: InputDecoration(
-          hintText: 'Поиск чтеца',
-          hintStyle: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
-          prefixIcon: const Icon(Iconsax.search_normal_1, color: SoftPalette.primary, size: 20),
+          hintText: context.s.searchReciter,
+          hintStyle: AppTextStyles.caption.copyWith(
+            color: SoftPalette.textSecondary,
+          ),
+          prefixIcon: const Icon(
+            Iconsax.search_normal_1,
+            color: SoftPalette.primary,
+            size: 20,
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),

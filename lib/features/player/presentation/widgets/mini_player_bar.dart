@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../settings/providers/settings_provider.dart';
@@ -23,9 +24,15 @@ class MiniPlayerBar extends ConsumerWidget {
       duration: const Duration(milliseconds: 220),
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
-        child: SizeTransition(sizeFactor: animation, alignment: Alignment.topCenter, child: child),
+        child: SizeTransition(
+          sizeFactor: animation,
+          alignment: Alignment.topCenter,
+          child: child,
+        ),
       ),
-      child: state == null ? const SizedBox.shrink(key: ValueKey('empty')) : _MiniPlayerContent(state: state),
+      child: state == null
+          ? const SizedBox.shrink(key: ValueKey('empty'))
+          : _MiniPlayerContent(state: state),
     );
   }
 }
@@ -58,8 +65,15 @@ class _MiniPlayerContent extends ConsumerWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-                child: const Icon(FlutterIslamicIcons.muslim, color: SoftPalette.primary, size: 20),
+                decoration: const BoxDecoration(
+                  color: SoftPalette.light,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  FlutterIslamicIcons.muslim,
+                  color: SoftPalette.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -77,10 +91,12 @@ class _MiniPlayerContent extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      'Аят ${ayah.numberInSurah} • ${reciter.name}',
+                      '${context.s.ayah(ayah.numberInSurah)} • ${reciter.name}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -95,7 +111,11 @@ class _MiniPlayerContent extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: SoftPalette.primary,
                     shape: BoxShape.circle,
-                    boxShadow: SoftPalette.softShadow(opacity: 0.16, y: 4, blur: 10),
+                    boxShadow: SoftPalette.softShadow(
+                      opacity: 0.16,
+                      y: 4,
+                      blur: 10,
+                    ),
                   ),
                   child: Icon(
                     state.isPlaying ? Iconsax.pause : Iconsax.play,

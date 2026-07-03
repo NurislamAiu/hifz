@@ -18,11 +18,13 @@ final filteredSurahsProvider = Provider<AsyncValue<List<Surah>>>((ref) {
   return surahsAsync.whenData((surahs) {
     if (query.isEmpty) return surahs;
     return surahs
-        .where((s) =>
-            s.nameTransliteration.toLowerCase().contains(query) ||
-            s.nameTranslationEn.toLowerCase().contains(query) ||
-            s.nameArabic.contains(query) ||
-            s.number.toString() == query)
+        .where(
+          (s) =>
+              s.nameTransliteration.toLowerCase().contains(query) ||
+              s.nameTranslationEn.toLowerCase().contains(query) ||
+              s.nameArabic.contains(query) ||
+              s.number.toString() == query,
+        )
         .toList();
   });
 });

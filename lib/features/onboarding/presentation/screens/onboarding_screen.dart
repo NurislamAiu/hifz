@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../settings/providers/settings_provider.dart';
 
@@ -9,26 +10,17 @@ class _OnboardingPageData {
   final String headline;
   final String subtitle;
 
-  const _OnboardingPageData({required this.image, required this.headline, required this.subtitle});
+  const _OnboardingPageData({
+    required this.image,
+    required this.headline,
+    required this.subtitle,
+  });
 }
 
-const _pages = [
-  _OnboardingPageData(
-    image: 'assets/images/onboarding/onboarding_1.png',
-    headline: 'Слушайте Коран',
-    subtitle: 'Аяты в исполнении лучших чтецов. Слушайте офлайн — где бы вы ни были.',
-  ),
-  _OnboardingPageData(
-    image: 'assets/images/onboarding/onboarding_2.png',
-    headline: 'Учите аяты наизусть',
-    subtitle: 'Зацикливайте любой аят и повторяйте столько раз, сколько нужно для хифза.',
-  ),
-  _OnboardingPageData(
-    image: 'assets/images/onboarding/onboarding_3.png',
-    headline: 'Полностью бесплатно',
-    subtitle:
-        'Без рекламы и подписок — и всегда будет так. Если приложение помогло, вы можете сделать садака в поддержку труда команды.',
-  ),
+const _pageImages = [
+  'assets/images/onboarding/onboarding_1.png',
+  'assets/images/onboarding/onboarding_2.png',
+  'assets/images/onboarding/onboarding_3.png',
 ];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -48,18 +40,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  bool get _isLast => _index == _pages.length - 1;
+  bool get _isLast => _index == _pageImages.length - 1;
 
-  void _finish() => ref.read(settingsControllerProvider.notifier).completeOnboarding();
+  void _finish() =>
+      ref.read(settingsControllerProvider.notifier).completeOnboarding();
 
   void _next() {
-    _controller.nextPage(duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
+    _controller.nextPage(
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final topInset = MediaQuery.of(context).padding.top;
+    final s = context.s;
+    final pages = [
+      _OnboardingPageData(
+        image: _pageImages[0],
+        headline: s.onboardingListenTitle,
+        subtitle: s.onboardingListenSubtitle,
+      ),
+      _OnboardingPageData(
+        image: _pageImages[1],
+        headline: s.onboardingMemorizeTitle,
+        subtitle: s.onboardingMemorizeSubtitle,
+      ),
+      _OnboardingPageData(
+        image: _pageImages[2],
+        headline: s.onboardingFreeTitle,
+        subtitle: s.onboardingFreeSubtitle,
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -67,9 +81,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         children: [
           PageView.builder(
             controller: _controller,
-            itemCount: _pages.length,
+            itemCount: pages.length,
             onPageChanged: (i) => setState(() => _index = i),
-            itemBuilder: (context, i) => _OnboardingPage(data: _pages[i]),
+            itemBuilder: (context, i) => _OnboardingPage(data: pages[i]),
           ),
           if (!_isLast)
             Positioned(
@@ -77,8 +91,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               right: 16,
               child: TextButton(
                 onPressed: _finish,
-                style: TextButton.styleFrom(foregroundColor: Colors.white.withValues(alpha: 0.85)),
-                child: const Text('Пропустить'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white.withValues(alpha: 0.85),
+                ),
+                child: Text(s.skip),
               ),
             ),
           Positioned(
@@ -91,14 +107,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    for (var i = 0; i < _pages.length; i++)
+                    for (var i = 0; i < pages.length; i++)
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: i == _index ? 22 : 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: i == _index ? Colors.white : Colors.white.withValues(alpha: 0.35),
+                          color: i == _index
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.35),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -113,12 +131,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppColors.background,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(
-                      _isLast ? 'Начать' : 'Далее',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      _isLast ? s.start : s.next,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),

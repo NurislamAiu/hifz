@@ -33,11 +33,14 @@ abstract final class AppColors {
   );
 
   static LinearGradient playerGradient({Color? accentColor}) => LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [
-          background,
-          Color.alphaBlend((accentColor ?? accent).withValues(alpha: 0.22), backgroundGradientTop),
-        ],
-      );
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [
+      background,
+      Color.alphaBlend(
+        (accentColor ?? accent).withValues(alpha: 0.22),
+        backgroundGradientTop,
+      ),
+    ],
+  );
 }

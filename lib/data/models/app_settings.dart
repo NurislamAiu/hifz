@@ -4,6 +4,20 @@ import 'prayer_calculation_method.dart';
 
 part 'app_settings.g.dart';
 
+enum RepentanceReminderTone {
+  gentle,
+  firm;
+
+  String get storageName => name;
+
+  static RepentanceReminderTone fromStorageName(String? value) {
+    return RepentanceReminderTone.values.firstWhere(
+      (tone) => tone.storageName == value,
+      orElse: () => RepentanceReminderTone.gentle,
+    );
+  }
+}
+
 @HiveType(typeId: 8)
 class AppSettings {
   static const defaultListeningGoalMinutes = 5;
@@ -70,6 +84,15 @@ class AppSettings {
   @HiveField(18)
   final bool? ishaNotificationEnabled;
 
+  @HiveField(19)
+  final String? repentanceReminderToneName;
+
+  @HiveField(20)
+  final String? appLanguageCode;
+
+  RepentanceReminderTone get repentanceReminderTone =>
+      RepentanceReminderTone.fromStorageName(repentanceReminderToneName);
+
   bool isPrayerNotificationEnabled(String key) => switch (key) {
     'fajr' => fajrNotificationEnabled ?? true,
     'dhuhr' => dhuhrNotificationEnabled ?? true,
@@ -122,6 +145,8 @@ class AppSettings {
     this.asrNotificationEnabled,
     this.maghribNotificationEnabled,
     this.ishaNotificationEnabled,
+    this.repentanceReminderToneName,
+    this.appLanguageCode,
   });
 
   AppSettings copyWith({
@@ -144,6 +169,8 @@ class AppSettings {
     bool? asrNotificationEnabled,
     bool? maghribNotificationEnabled,
     bool? ishaNotificationEnabled,
+    RepentanceReminderTone? repentanceReminderTone,
+    String? appLanguageCode,
   }) => AppSettings(
     reciterId: reciterId ?? this.reciterId,
     displayMode: displayMode ?? this.displayMode,
@@ -176,6 +203,9 @@ class AppSettings {
         maghribNotificationEnabled ?? this.maghribNotificationEnabled,
     ishaNotificationEnabled:
         ishaNotificationEnabled ?? this.ishaNotificationEnabled,
+    repentanceReminderToneName:
+        repentanceReminderTone?.storageName ?? repentanceReminderToneName,
+    appLanguageCode: appLanguageCode ?? this.appLanguageCode,
   );
 }
 

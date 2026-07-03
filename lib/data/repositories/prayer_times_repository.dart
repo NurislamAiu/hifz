@@ -61,10 +61,14 @@ class PrayerTimesRepository {
     List<Map<String, dynamic>>? month = _cacheRepository.getRawMonth(cacheKey);
     if (month != null) {
       fromCache = true;
-      debugPrint('[PrayerTimes][Repo] cache hit days=${month.length}, skipping API');
+      debugPrint(
+        '[PrayerTimes][Repo] cache hit days=${month.length}, skipping API',
+      );
     } else {
       try {
-        debugPrint('[PrayerTimes][Repo] cache miss, fetching API cacheKey=$cacheKey');
+        debugPrint(
+          '[PrayerTimes][Repo] cache miss, fetching API cacheKey=$cacheKey',
+        );
         month = await _apiClient.fetchMonthlyTimings(
           latitude: lat,
           longitude: lng,

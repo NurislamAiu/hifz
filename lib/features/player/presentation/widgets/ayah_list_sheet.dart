@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../providers/player_provider.dart';
@@ -35,7 +36,10 @@ class AyahListSheet extends ConsumerWidget {
             Container(
               width: 36,
               height: 4,
-              decoration: BoxDecoration(color: SoftPalette.track, borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                color: SoftPalette.track,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -43,12 +47,16 @@ class AyahListSheet extends ConsumerWidget {
                 children: [
                   Text(
                     playerState.surahNameTransliteration,
-                    style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                    style: AppTextStyles.title.copyWith(
+                      color: SoftPalette.textDark,
+                    ),
                   ),
                   const Spacer(),
                   Text(
-                    '${playerState.ayahs.length} аятов',
-                    style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                    context.s.ayahCount(playerState.ayahs.length),
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -63,12 +71,16 @@ class AyahListSheet extends ConsumerWidget {
                   final isCurrent = i == playerState.currentIndex;
                   return ListTile(
                     onTap: () {
-                      ref.read(playerControllerProvider.notifier).jumpToAyah(ayah.numberInSurah);
+                      ref
+                          .read(playerControllerProvider.notifier)
+                          .jumpToAyah(ayah.numberInSurah);
                       Navigator.of(context).pop();
                     },
                     leading: CircleAvatar(
                       radius: 15,
-                      backgroundColor: isCurrent ? SoftPalette.primary : SoftPalette.light,
+                      backgroundColor: isCurrent
+                          ? SoftPalette.primary
+                          : SoftPalette.light,
                       child: Text(
                         '${ayah.numberInSurah}',
                         style: AppTextStyles.caption.copyWith(
@@ -85,11 +97,17 @@ class AyahListSheet extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.body.copyWith(
                         fontFamily: AppTextStyles.arabicFontFamily,
-                        color: isCurrent ? SoftPalette.primary : SoftPalette.textDark,
+                        color: isCurrent
+                            ? SoftPalette.primary
+                            : SoftPalette.textDark,
                       ),
                     ),
                     trailing: isCurrent
-                        ? const Icon(Iconsax.chart, color: SoftPalette.primary, size: 18)
+                        ? const Icon(
+                            Iconsax.chart,
+                            color: SoftPalette.primary,
+                            size: 18,
+                          )
                         : null,
                   );
                 },

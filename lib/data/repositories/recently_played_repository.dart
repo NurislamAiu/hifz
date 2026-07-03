@@ -18,6 +18,8 @@ class RecentlyPlayedRepository {
     current.insert(0, entry);
     final trimmed = current.take(_maxEntries).toList();
     await HiveBoxes.recent.clear();
-    await HiveBoxes.recent.putAll({for (var i = 0; i < trimmed.length; i++) i: trimmed[i]});
+    await HiveBoxes.recent.putAll({
+      for (var i = 0; i < trimmed.length; i++) i: trimmed[i],
+    });
   }
 }

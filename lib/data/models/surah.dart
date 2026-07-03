@@ -35,11 +35,11 @@ class Surah {
   });
 
   factory Surah.fromApiJson(Map<String, dynamic> json) => Surah(
-        number: json['number'] as int,
-        nameArabic: json['name'] as String,
-        nameTransliteration: json['englishName'] as String,
-        nameTranslationEn: json['englishNameTranslation'] as String,
-        revelationType: json['revelationType'] as String,
-        numberOfAyahs: json['numberOfAyahs'] as int,
-      );
+    number: json['number'] as int,
+    nameArabic: json['name'] as String,
+    nameTransliteration: json['englishName'] as String,
+    nameTranslationEn: json['englishNameTranslation'] as String,
+    revelationType: json['revelationType'] as String,
+    numberOfAyahs: json['numberOfAyahs'] as int,
+  );
 }

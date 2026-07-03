@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/prayer_city.dart';
 import '../../providers/prayer_times_provider.dart';
@@ -14,16 +15,9 @@ import '../widgets/stats_section.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 6) return 'Доброй ночи';
-    if (hour < 12) return 'Доброе утро';
-    if (hour < 18) return 'Добрый день';
-    return 'Добрый вечер';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final selectedCityId = ref.watch(
       settingsControllerProvider.select((settings) => settings.selectedCityId),
     );
@@ -40,24 +34,32 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _greeting(),
-                style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                s.greetingForHour(DateTime.now().hour),
+                style: AppTextStyles.overline.copyWith(
+                  color: SoftPalette.textSecondary,
+                ),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset('assets/icon.png', width: 34, height: 34),
+                    child: Image.asset(
+                      'assets/icon.png',
+                      width: 34,
+                      height: 34,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Text(
                     'Hifz',
-                    style: AppTextStyles.displayTitle.copyWith(color: SoftPalette.textDark),
+                    style: AppTextStyles.displayTitle.copyWith(
+                      color: SoftPalette.textDark,
+                    ),
                   ),
                   const Spacer(),
                   _CityButton(
-                    label: selectedCity?.name ?? 'Гео',
+                    label: selectedCity?.localizedName(s.language) ?? s.geo,
                     onTap: () => _showCityPicker(context, ref, selectedCityId),
                   ),
                 ],
@@ -88,6 +90,7 @@ class HomeScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
+        final s = context.s;
         Future<void> selectCity(String? cityId) async {
           await ref
               .read(settingsControllerProvider.notifier)
@@ -111,28 +114,33 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Город для намаза',
-                          style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                          s.prayerCity,
+                          style: AppTextStyles.title.copyWith(
+                            color: SoftPalette.textDark,
+                          ),
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(sheetContext).pop(),
-                        icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
+                        icon: const Icon(
+                          Iconsax.close_circle,
+                          color: SoftPalette.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   _CityTile(
-                    title: 'Моя геолокация',
-                    subtitle: 'Использовать текущее местоположение',
+                    title: s.myLocation,
+                    subtitle: s.useCurrentLocation,
                     selected: selectedCityId == null,
                     onTap: () => selectCity(null),
                   ),
                   Divider(height: 1, color: SoftPalette.track),
                   for (final city in PrayerCities.all) ...[
                     _CityTile(
-                      title: city.name,
-                      subtitle: city.region,
+                      title: city.localizedName(s.language),
+                      subtitle: city.localizedRegion(s.language),
                       selected: selectedCityId == city.id,
                       onTap: () => selectCity(city.id),
                     ),
@@ -183,7 +191,11 @@ class _CityButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(Iconsax.arrow_down_1, color: SoftPalette.textSecondary, size: 18),
+            const Icon(
+              Iconsax.arrow_down_1,
+              color: SoftPalette.textSecondary,
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -213,9 +225,17 @@ class _CityTile extends StatelessWidget {
         selected ? Iconsax.record_circle : Iconsax.record,
         color: selected ? SoftPalette.primary : SoftPalette.textSecondary,
       ),
-      title: Text(title, style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
-      subtitle: Text(subtitle, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
-      trailing: selected ? const Icon(Iconsax.tick_circle, color: SoftPalette.primary) : null,
+      title: Text(
+        title,
+        style: AppTextStyles.body.copyWith(color: SoftPalette.textDark),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+      ),
+      trailing: selected
+          ? const Icon(Iconsax.tick_circle, color: SoftPalette.primary)
+          : null,
     );
   }
 }

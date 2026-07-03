@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/app_strings.dart';
 import '../../../data/models/daily_prayer_times.dart';
 import '../../../data/models/prayer_city.dart';
 import '../../../data/providers.dart';
@@ -19,7 +20,12 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
   final notificationsEnabled = settings.notificationsEnabled ?? false;
   final notificationRepository = ref.read(notificationRepositoryProvider);
   if (notificationsEnabled) {
-    unawaited(notificationRepository.scheduleHourlyRepentanceReminders());
+    unawaited(
+      notificationRepository.scheduleDailyRepentanceReminders(
+        tone: settings.repentanceReminderTone,
+        language: AppLanguage.fromCode(settings.appLanguageCode),
+      ),
+    );
   }
 
   final selectedCity = PrayerCities.byId(settings.selectedCityId);
@@ -27,17 +33,24 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
   // Prefer the official Kazakhstan (muftyat.kz) times bundled for the built-in
   // cities — they match the published schedule exactly (no 2–5 min drift).
   if (selectedCity != null) {
-    final official = await ref.read(officialPrayerTimesRepositoryProvider).getSchedule(
+    final official = await ref
+        .read(officialPrayerTimesRepositoryProvider)
+        .getSchedule(
           city: selectedCity,
           adjustments: settings.prayerAdjustments,
         );
     if (official != null) {
-      debugPrint('[PrayerTimes][Provider] using official muftyat data for ${selectedCity.name}');
+      debugPrint(
+        '[PrayerTimes][Provider] using official muftyat data for ${selectedCity.name}',
+      );
       if (notificationsEnabled) {
-        unawaited(notificationRepository.scheduleTodayPrayerNotifications(
-          official,
-          disabledKeys: settings.disabledPrayerKeys,
-        ));
+        unawaited(
+          notificationRepository.scheduleTodayPrayerNotifications(
+            official,
+            disabledKeys: settings.disabledPrayerKeys,
+            language: AppLanguage.fromCode(settings.appLanguageCode),
+          ),
+        );
       }
       return official;
     }
@@ -72,12 +85,15 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
     '[PrayerTimes][Provider] loading schedule city=${effectiveCity?.name ?? 'Моя геолокация'} '
     'lat=${coords.lat} lng=${coords.lng} tz=${effectiveCity?.timeZone}',
   );
+  final strings = AppStrings(AppLanguage.fromCode(settings.appLanguageCode));
   final prayerTimes = await ref
       .watch(prayerTimesRepositoryProvider)
       .getTodaySchedule(
         lat: coords.lat,
         lng: coords.lng,
-        cityName: effectiveCity?.name ?? 'Моя геолокация',
+        cityName:
+            effectiveCity?.localizedName(strings.language) ??
+            strings.currentLocationName,
         timeZone: effectiveCity?.timeZone,
         method: settings.prayerMethod,
         adjustments: settings.prayerAdjustments,
@@ -93,6 +109,7 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
       notificationRepository.scheduleTodayPrayerNotifications(
         prayerTimes,
         disabledKeys: settings.disabledPrayerKeys,
+        language: AppLanguage.fromCode(settings.appLanguageCode),
       ),
     );
   }

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="kk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hifz</title>
+    <meta
+      name="description"
+      content="Hifz helps you listen to the Quran, memorize ayahs, track progress, and receive gentle repentance reminders."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --accent: #1597a3;
+        --bg: #f8fbfb;
+        --text: #111819;
+        --muted: #5d6b70;
+        --line: rgba(17, 24, 25, 0.12);
+        --panel: rgba(255, 255, 255, 0.72);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #070a0b;
+          --text: #f6fbfb;
+          --muted: #a6b6bb;
+          --line: rgba(246, 251, 251, 0.14);
+          --panel: rgba(255, 255, 255, 0.06);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding-bottom: 48px;
+      }
+
+      nav {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        font-size: 20px;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: var(--accent);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+        gap: 32px;
+        align-items: center;
+        padding-bottom: 52px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(44px, 8vw, 88px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 24px;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .lead {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 19px;
+        max-width: 620px;
+      }
+
+      .phone {
+        aspect-ratio: 0.72;
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        padding: 18px;
+        background: var(--panel);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+      }
+
+      .screen {
+        height: 100%;
+        border-radius: 26px;
+        padding: 22px;
+        background:
+          linear-gradient(160deg, rgba(21, 151, 163, 0.18), transparent 42%),
+          var(--bg);
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .ayah {
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .ref {
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        background: var(--panel);
+      }
+
+      .card p {
+        color: var(--muted);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 28px;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        margin-top: 44px;
+        padding-top: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 760px) {
+        header,
+        .hero,
+        .split {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand"><span class="mark" aria-hidden="true"></span>Hifz</div>
+        <nav aria-label="Navigation">
+          <a href="./support/">Support</a>
+          <a href="./privacy/">Privacy</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div>
+          <h1>Hifz</h1>
+          <p class="lead">
+            Құран тыңдауға, аяттарды жаттауға, прогресті бақылауға және тәубе туралы жұмсақ
+            еске салғыштар алуға арналған қолданба.
+          </p>
+          <p class="lead">
+            Приложение для прослушивания Корана, заучивания аятов, отслеживания прогресса и
+            напоминаний о покаянии.
+          </p>
+        </div>
+        <div class="phone" aria-label="Hifz preview">
+          <div class="screen">
+            <div>
+              <p class="ref">39:53</p>
+              <p class="ayah">Алланың рақымынан үміт үзбеңіз.</p>
+            </div>
+            <p>Listen. Repeat. Memorize.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" aria-label="Features">
+        <article class="card">
+          <h2>Тыңдау</h2>
+          <p>Қариларды таңдап, Құран аяттарын ыңғайлы режимде тыңдаңыз.</p>
+        </article>
+        <article class="card">
+          <h2>Жаттау</h2>
+          <p>Аяттарды қайталап қойып, хифз прогресін бақылаңыз.</p>
+        </article>
+        <article class="card">
+          <h2>Еске салу</h2>
+          <p>Тәубе туралы пайдалы еске салғыштар мен виджет мәтіндері.</p>
+        </article>
+      </section>
+
+      <section class="split" aria-label="Russian description">
+        <article class="card">
+          <h2>Слушайте</h2>
+          <p>Выбирайте чтецов и слушайте аяты Корана в удобном формате.</p>
+        </article>
+        <article class="card">
+          <h2>Учите</h2>
+          <p>Повторяйте аяты, сохраняйте избранное и следите за своим хифзом.</p>
+        </article>
+      </section>
+
+      <footer>
+        <p>Hifz is an independent Quran memorization app. Quran text and recitations belong to their respected sources.</p>
+      </footer>
+    </main>
+  </body>
+</html>

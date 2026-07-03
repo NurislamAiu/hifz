@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/favorite_item.dart';
@@ -13,7 +14,9 @@ import '../../providers/favorites_provider.dart';
 
 enum _FavoritesFilter { all, surahs, ayahs }
 
-final _favoritesFilterProvider = StateProvider<_FavoritesFilter>((ref) => _FavoritesFilter.all);
+final _favoritesFilterProvider = StateProvider<_FavoritesFilter>(
+  (ref) => _FavoritesFilter.all,
+);
 
 const _ayahAccent = Color(0xFFE0A83F);
 
@@ -22,6 +25,7 @@ class FavoritesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final favorites = ref.watch(favoritesControllerProvider);
     final quranRepo = ref.watch(quranRepositoryProvider);
     final recent = ref.watch(recentlyPlayedRepositoryProvider).getAll();
@@ -29,8 +33,10 @@ class FavoritesScreen extends ConsumerWidget {
 
     final filtered = switch (filter) {
       _FavoritesFilter.all => favorites,
-      _FavoritesFilter.surahs => favorites.where((f) => f.type == FavoriteType.surah).toList(),
-      _FavoritesFilter.ayahs => favorites.where((f) => f.type == FavoriteType.ayah).toList(),
+      _FavoritesFilter.surahs =>
+        favorites.where((f) => f.type == FavoriteType.surah).toList(),
+      _FavoritesFilter.ayahs =>
+        favorites.where((f) => f.type == FavoriteType.ayah).toList(),
     };
 
     return Container(
@@ -44,8 +50,10 @@ class FavoritesScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               sliver: SliverToBoxAdapter(
                 child: Text(
-                  'Избранное',
-                  style: AppTextStyles.displayTitle.copyWith(color: SoftPalette.textDark),
+                  s.favorites,
+                  style: AppTextStyles.displayTitle.copyWith(
+                    color: SoftPalette.textDark,
+                  ),
                 ),
               ),
             ),
@@ -54,8 +62,10 @@ class FavoritesScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                 sliver: SliverToBoxAdapter(
                   child: Text(
-                    'Недавно прослушано',
-                    style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                    s.recentlyPlayed,
+                    style: AppTextStyles.overline.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -67,15 +77,19 @@ class FavoritesScreen extends ConsumerWidget {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: recent.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, i) {
                         final (surahNumber, ayahNumber) = recent[i];
                         if (!quranRepo.isCached) return const SizedBox.shrink();
                         final surah = quranRepo.getSurah(surahNumber);
                         return _RecentCard(
                           title: surah.nameTransliteration,
-                          subtitle: 'Аят $ayahNumber',
-                          onTap: () => PlayerScreen.open(context, surahNumber: surahNumber, startAyah: ayahNumber),
+                          subtitle: s.ayah(ayahNumber),
+                          onTap: () => PlayerScreen.open(
+                            context,
+                            surahNumber: surahNumber,
+                            startAyah: ayahNumber,
+                          ),
                         );
                       },
                     ),
@@ -90,13 +104,17 @@ class FavoritesScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Сохранённое',
-                      style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                      s.saved,
+                      style: AppTextStyles.overline.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                     if (favorites.isNotEmpty)
                       _FilterSwitcher(
                         current: filter,
-                        onChanged: (f) => ref.read(_favoritesFilterProvider.notifier).state = f,
+                        onChanged: (f) =>
+                            ref.read(_favoritesFilterProvider.notifier).state =
+                                f,
                       ),
                   ],
                 ),
@@ -113,8 +131,10 @@ class FavoritesScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Center(
                     child: Text(
-                      'Ничего нет в этой категории',
-                      style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                      s.emptyCategory,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -124,7 +144,7 @@ class FavoritesScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
                 sliver: SliverList.separated(
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
                     final item = filtered[i];
                     if (!quranRepo.isCached) return const SizedBox.shrink();
@@ -134,14 +154,31 @@ class FavoritesScreen extends ConsumerWidget {
                       isAyah: isAyah,
                       title: surah.nameTransliteration,
                       nameArabic: surah.nameArabic,
-                      subtitle: isAyah ? 'Аят ${item.ayahNumberInSurah}' : '${surah.numberOfAyahs} аятов',
+                      subtitle: isAyah
+                          ? s.ayah(item.ayahNumberInSurah!)
+                          : s.ayahCount(surah.numberOfAyahs),
                       onRemove: () => isAyah
-                          ? ref.read(favoritesControllerProvider.notifier).toggleAyah(item.surahNumber, item.ayahNumberInSurah!)
-                          : ref.read(favoritesControllerProvider.notifier).toggleSurah(item.surahNumber),
+                          ? ref
+                                .read(favoritesControllerProvider.notifier)
+                                .toggleAyah(
+                                  item.surahNumber,
+                                  item.ayahNumberInSurah!,
+                                )
+                          : ref
+                                .read(favoritesControllerProvider.notifier)
+                                .toggleSurah(item.surahNumber),
                       onTap: () => isAyah
-                          ? PlayerScreen.open(context, surahNumber: item.surahNumber, startAyah: item.ayahNumberInSurah!)
+                          ? PlayerScreen.open(
+                              context,
+                              surahNumber: item.surahNumber,
+                              startAyah: item.ayahNumberInSurah!,
+                            )
                           : Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => SurahDetailScreen(surahNumber: item.surahNumber)),
+                              MaterialPageRoute(
+                                builder: (_) => SurahDetailScreen(
+                                  surahNumber: item.surahNumber,
+                                ),
+                              ),
                             ),
                     );
                   },
@@ -191,7 +228,10 @@ class _FavoriteTile extends StatelessWidget {
               width: 44,
               height: 44,
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.14), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: badgeColor.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
               child: Icon(
                 isAyah ? Iconsax.bookmark : FlutterIslamicIcons.quran,
                 color: badgeColor,
@@ -228,7 +268,12 @@ class _FavoriteTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -275,13 +320,16 @@ class _FilterSwitcher extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(color: SoftPalette.light, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: SoftPalette.light,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          chip('Все', _FavoritesFilter.all),
-          chip('Суры', _FavoritesFilter.surahs),
-          chip('Аяты', _FavoritesFilter.ayahs),
+          chip(context.s.all, _FavoritesFilter.all),
+          chip(context.s.favoriteSurahs, _FavoritesFilter.surahs),
+          chip(context.s.favoriteAyahs, _FavoritesFilter.ayahs),
         ],
       ),
     );
@@ -303,19 +351,31 @@ class _EmptyFavorites extends StatelessWidget {
               width: 72,
               height: 72,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-              child: const Icon(Iconsax.star, color: SoftPalette.primary, size: 32),
+              decoration: const BoxDecoration(
+                color: SoftPalette.light,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Iconsax.star,
+                color: SoftPalette.primary,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Пока нет избранного',
-              style: AppTextStyles.body.copyWith(color: SoftPalette.textDark, fontWeight: FontWeight.w700),
+              context.s.noFavorites,
+              style: AppTextStyles.body.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: FontWeight.w700,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(
-              'Отмечайте суры и аяты звёздочкой — они появятся здесь',
-              style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+              context.s.favoritesHint,
+              style: AppTextStyles.caption.copyWith(
+                color: SoftPalette.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -326,7 +386,11 @@ class _EmptyFavorites extends StatelessWidget {
 }
 
 class _RecentCard extends StatelessWidget {
-  const _RecentCard({required this.title, required this.subtitle, required this.onTap});
+  const _RecentCard({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
   final String title;
   final String subtitle;
@@ -353,16 +417,31 @@ class _RecentCard extends StatelessWidget {
               width: 30,
               height: 30,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-              child: const Icon(Iconsax.play, color: SoftPalette.primary, size: 18),
+              decoration: const BoxDecoration(
+                color: SoftPalette.light,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Iconsax.play,
+                color: SoftPalette.primary,
+                size: 18,
+              ),
             ),
             Text(
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: SoftPalette.textDark),
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w700,
+                color: SoftPalette.textDark,
+              ),
             ),
-            Text(subtitle, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
+            Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                color: SoftPalette.textSecondary,
+              ),
+            ),
           ],
         ),
       ),

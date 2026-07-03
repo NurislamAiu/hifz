@@ -1,3 +1,5 @@
+import '../../core/localization/app_strings.dart';
+
 class PrayerCity {
   const PrayerCity({
     required this.id,
@@ -14,6 +16,25 @@ class PrayerCity {
   final double lat;
   final double lng;
   final String timeZone;
+
+  String localizedName(AppLanguage language) {
+    if (language == AppLanguage.ru) return name;
+    return switch (id) {
+      'astana' => 'Астана',
+      'shymkent' => 'Шымкент',
+      'taraz' => 'Тараз',
+      'aktobe' => 'Ақтөбе',
+      'karaganda' => 'Қарағанды',
+      'atyrau' => 'Атырау',
+      'oral' => 'Орал',
+      'oskemen' => 'Өскемен',
+      'semey' => 'Семей',
+      _ => 'Алматы',
+    };
+  }
+
+  String localizedRegion(AppLanguage language) =>
+      language == AppLanguage.kk ? 'Қазақстан' : region;
 }
 
 abstract final class PrayerCities {

@@ -13,7 +13,11 @@ class LoopSettings {
   final bool infinite;
   final int repeatCount;
 
-  const LoopSettings({this.enabled = false, this.infinite = false, this.repeatCount = 3});
+  const LoopSettings({
+    this.enabled = false,
+    this.infinite = false,
+    this.repeatCount = 3,
+  });
 
   static const off = LoopSettings();
 }
@@ -113,7 +117,11 @@ class PlayerController extends Notifier<PlayerViewState?> {
     _player.processingStateStream.listen((ps) {
       final s = state;
       if (s == null) return;
-      state = s.copyWith(isBuffering: ps == ja.ProcessingState.buffering || ps == ja.ProcessingState.loading);
+      state = s.copyWith(
+        isBuffering:
+            ps == ja.ProcessingState.buffering ||
+            ps == ja.ProcessingState.loading,
+      );
       if (ps == ja.ProcessingState.completed) {
         _onAyahCompleted();
       }
@@ -146,7 +154,9 @@ class PlayerController extends Notifier<PlayerViewState?> {
 
     await _player.setSpeed(settings.playbackSpeed);
     await _loadCurrentAyah(autoplay: true);
-    await ref.read(recentlyPlayedRepositoryProvider).add(surahNumber, state!.currentIndex + 1);
+    await ref
+        .read(recentlyPlayedRepositoryProvider)
+        .add(surahNumber, state!.currentIndex + 1);
   }
 
   Future<void> _loadCurrentAyah({bool autoplay = false}) async {
@@ -171,11 +181,13 @@ class PlayerController extends Notifier<PlayerViewState?> {
         ayahNumberInSurah: ayah.numberInSurah,
       );
       await _player.setUrl(url);
-      unawaited(audioRepo.downloadAyah(
-        reciterFolder: reciter.folder,
-        surahNumber: ayah.surahNumber,
-        ayahNumberInSurah: ayah.numberInSurah,
-      ));
+      unawaited(
+        audioRepo.downloadAyah(
+          reciterFolder: reciter.folder,
+          surahNumber: ayah.surahNumber,
+          ayahNumberInSurah: ayah.numberInSurah,
+        ),
+      );
     }
 
     if (autoplay || s.isPlaying) {
@@ -189,7 +201,11 @@ class PlayerController extends Notifier<PlayerViewState?> {
 
     if (s.loop.enabled) {
       if (s.loop.infinite || s.repeatsRemaining > 1) {
-        state = s.copyWith(repeatsRemaining: s.loop.infinite ? s.repeatsRemaining : s.repeatsRemaining - 1);
+        state = s.copyWith(
+          repeatsRemaining: s.loop.infinite
+              ? s.repeatsRemaining
+              : s.repeatsRemaining - 1,
+        );
         await _player.seek(Duration.zero);
         await _player.play();
         return;
@@ -221,7 +237,9 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: s.currentIndex + 1,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite ? s.loop.repeatCount : 0,
+      repeatsRemaining: s.loop.enabled && !s.loop.infinite
+          ? s.loop.repeatCount
+          : 0,
     );
     await _loadCurrentAyah(autoplay: s.isPlaying || true);
   }
@@ -240,7 +258,9 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: s.currentIndex - 1,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite ? s.loop.repeatCount : 0,
+      repeatsRemaining: s.loop.enabled && !s.loop.infinite
+          ? s.loop.repeatCount
+          : 0,
     );
     await _loadCurrentAyah(autoplay: true);
   }
@@ -253,7 +273,9 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: index,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite ? s.loop.repeatCount : 0,
+      repeatsRemaining: s.loop.enabled && !s.loop.infinite
+          ? s.loop.repeatCount
+          : 0,
     );
     await _loadCurrentAyah(autoplay: true);
   }
@@ -290,6 +312,5 @@ class PlayerController extends Notifier<PlayerViewState?> {
   }
 }
 
-final playerControllerProvider = NotifierProvider<PlayerController, PlayerViewState?>(
-  PlayerController.new,
-);
+final playerControllerProvider =
+    NotifierProvider<PlayerController, PlayerViewState?>(PlayerController.new);

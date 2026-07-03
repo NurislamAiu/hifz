@@ -34,7 +34,8 @@ class PlayerProgressBar extends StatelessWidget {
             value: value,
             activeColor: SoftPalette.primary,
             inactiveColor: SoftPalette.track,
-            onChanged: (v) => onSeek(Duration(milliseconds: (v * total).round())),
+            onChanged: (v) =>
+                onSeek(Duration(milliseconds: (v * total).round())),
           ),
         ),
         Padding(
@@ -42,10 +43,17 @@ class PlayerProgressBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(position.mmss, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
+              Text(
+                position.mmss,
+                style: AppTextStyles.caption.copyWith(
+                  color: SoftPalette.textSecondary,
+                ),
+              ),
               Text(
                 '-${remaining.isNegative ? Duration.zero.mmss : remaining.mmss}',
-                style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                style: AppTextStyles.caption.copyWith(
+                  color: SoftPalette.textSecondary,
+                ),
               ),
             ],
           ),

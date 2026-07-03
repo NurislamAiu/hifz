@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/providers.dart';
 import '../../../player/presentation/screens/player_screen.dart';
@@ -14,6 +15,7 @@ class ContinueListeningCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final quranRepo = ref.watch(quranRepositoryProvider);
     final recent = ref.watch(recentlyPlayedRepositoryProvider).getAll();
     final reciter = ref.watch(selectedReciterProvider);
@@ -36,8 +38,15 @@ class ContinueListeningCard extends ConsumerWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-            child: const Icon(FlutterIslamicIcons.quran, color: SoftPalette.primary, size: 26),
+            decoration: const BoxDecoration(
+              color: SoftPalette.light,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              FlutterIslamicIcons.quran,
+              color: SoftPalette.primary,
+              size: 26,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -45,8 +54,10 @@ class ContinueListeningCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Продолжить',
-                  style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                  s.continueListening,
+                  style: AppTextStyles.overline.copyWith(
+                    color: SoftPalette.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -58,8 +69,10 @@ class ContinueListeningCard extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '${reciter.name} · Аят $ayahNumber',
-                  style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                  s.reciterAyah(reciter.name, ayahNumber),
+                  style: AppTextStyles.caption.copyWith(
+                    color: SoftPalette.textSecondary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -68,7 +81,11 @@ class ContinueListeningCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: () => PlayerScreen.open(context, surahNumber: surahNumber, startAyah: ayahNumber),
+            onTap: () => PlayerScreen.open(
+              context,
+              surahNumber: surahNumber,
+              startAyah: ayahNumber,
+            ),
             child: Container(
               width: 44,
               height: 44,

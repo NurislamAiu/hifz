@@ -27,9 +27,9 @@ class AyahProgress {
   String get key => '$surahNumber:$ayahNumberInSurah';
 
   AyahProgress copyWith({MemorizationStatus? status}) => AyahProgress(
-        surahNumber: surahNumber,
-        ayahNumberInSurah: ayahNumberInSurah,
-        status: status ?? this.status,
-        updatedAt: DateTime.now(),
-      );
+    surahNumber: surahNumber,
+    ayahNumberInSurah: ayahNumberInSurah,
+    status: status ?? this.status,
+    updatedAt: DateTime.now(),
+  );
 }

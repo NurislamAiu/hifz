@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/daily_prayer_times.dart';
 import '../../../../data/providers.dart';
@@ -43,12 +44,12 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return '$h:$m';
   }
 
-  String _formatCountdown(Duration d) {
+  String _formatCountdown(BuildContext context, Duration d) {
     final duration = d.isNegative ? Duration.zero : d;
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    if (hours > 0) return '$hours ч $minutes мин';
-    return '$minutes мин';
+    if (hours > 0) return context.s.durationHoursMinutes(hours, minutes);
+    return context.s.durationMinutes(minutes);
   }
 
   IconData _iconForKey(String key) {
@@ -72,6 +73,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     final prayerTimesAsync = ref.watch(prayerTimesProvider);
 
     return prayerTimesAsync.when(
@@ -79,15 +81,18 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
         child: SizedBox(
           height: 64,
           child: Center(
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
           ),
         ),
       ),
       error: (e, _) => _PrayerCardShell(
         child: _PrayerTimesMessage(
           icon: Iconsax.cloud_cross,
-          message: _logPrayerError(e),
-          actionLabel: 'Повторить',
+          message: _logPrayerError(context, e),
+          actionLabel: s.retry,
           onAction: () => ref.invalidate(prayerTimesProvider),
         ),
       ),
@@ -97,8 +102,8 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           return _PrayerCardShell(
             child: _PrayerTimesMessage(
               icon: Iconsax.location,
-              message: 'Разрешите доступ к геолокации, чтобы увидеть время намазов',
-              actionLabel: 'Включить',
+              message: s.locationPermissionMessage,
+              actionLabel: s.enable,
               onAction: () => ref.invalidate(prayerTimesProvider),
             ),
           );
@@ -108,19 +113,29 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           'next=${prayerTimes.next.label} at=${prayerTimes.next.time} '
           'entries=${prayerTimes.entries.length}',
         );
+        final cityName = prayerTimes.cityName == 'Моя геолокация'
+            ? s.currentLocationName
+            : prayerTimes.cityName;
+        final methodName = prayerTimes.methodName.replaceAll(
+          'локально',
+          s.isKk ? 'жергілікті' : 'локально',
+        );
         return _PrayerCardShell(
           onTune: () => _showPrayerSettings(context),
-          cityName: prayerTimes.cityName,
+          cityName: cityName,
           dateLabel: prayerTimes.dateLabel,
-          countdownLabel:
-              '${prayerTimes.next.label} через ${_formatCountdown(prayerTimes.timeUntilNext)}',
-          methodName: prayerTimes.methodName,
+          countdownLabel: s.prayerCountdown(
+            s.prayerName(prayerTimes.next.key),
+            _formatCountdown(context, prayerTimes.timeUntilNext),
+          ),
+          methodName: methodName,
           child: Row(
             children: [
               for (final entry in prayerTimes.entries)
                 Expanded(
                   child: _PrayerColumn(
                     entry: entry,
+                    label: s.prayerName(entry.key),
                     isActive: entry.key == prayerTimes.next.key,
                     icon: _iconForKey(entry.key),
                     formatTime: _formatTime,
@@ -133,9 +148,9 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     );
   }
 
-  String _logPrayerError(Object error) {
+  String _logPrayerError(BuildContext context, Object error) {
     debugPrint('[PrayerTimes][UI] error=$error');
-    return 'Не удалось показать время намаза. Попробуйте ещё раз';
+    return context.s.prayerError;
   }
 
   Future<void> _rescheduleNotifications() async {
@@ -143,20 +158,17 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     if (!(settings.notificationsEnabled ?? false)) return;
     final prayerTimes = ref.read(prayerTimesProvider).valueOrNull;
     if (prayerTimes == null) return;
-    await ref.read(notificationRepositoryProvider).scheduleTodayPrayerNotifications(
+    await ref
+        .read(notificationRepositoryProvider)
+        .scheduleTodayPrayerNotifications(
           prayerTimes,
           disabledKeys: settings.disabledPrayerKeys,
+          language: AppLanguage.fromCode(settings.appLanguageCode),
         );
   }
 
   Future<void> _showPrayerSettings(BuildContext context) async {
-    const prayers = <(String, String)>[
-      ('fajr', 'Фаджр'),
-      ('dhuhr', 'Зухр'),
-      ('asr', 'Аср'),
-      ('maghrib', 'Магриб'),
-      ('isha', 'Иша'),
-    ];
+    const prayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
     await showModalBottomSheet<void>(
       context: context,
@@ -170,6 +182,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           child: Consumer(
             builder: (context, sheetRef, _) {
               final settings = sheetRef.watch(settingsControllerProvider);
+              final s = context.s;
               return Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                 child: Column(
@@ -180,30 +193,39 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Настройки намаза',
-                            style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                            s.prayerSettings,
+                            style: AppTextStyles.title.copyWith(
+                              color: SoftPalette.textDark,
+                            ),
                           ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.of(sheetContext).pop(),
-                          icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
+                          icon: const Icon(
+                            Iconsax.close_circle,
+                            color: SoftPalette.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Уведомления о намазе',
-                      style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                      s.prayerNotifications,
+                      style: AppTextStyles.overline.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Выключите намазы, о которых не нужно напоминать',
-                      style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                      s.disablePrayerHint,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    for (final (key, label) in prayers)
+                    for (final key in prayerKeys)
                       _PrayerNotifyRow(
-                        label: label,
+                        label: s.prayerName(key),
                         icon: _iconForKey(key),
                         value: settings.isPrayerNotificationEnabled(key),
                         onChanged: (value) async {
@@ -248,7 +270,11 @@ class _PrayerNotifyRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: value ? SoftPalette.primary : SoftPalette.textSecondary),
+          Icon(
+            icon,
+            size: 20,
+            color: value ? SoftPalette.primary : SoftPalette.textSecondary,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -349,7 +375,7 @@ class _PrayerCardShell extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                cityName ?? 'Время намаза',
+                                cityName ?? context.s.prayerTimes,
                                 style: AppTextStyles.body.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -383,7 +409,7 @@ class _PrayerCardShell extends StatelessWidget {
                             onPressed: onTune,
                             icon: const Icon(Iconsax.setting_4, size: 20),
                             color: Colors.white,
-                            tooltip: 'Настройки намаза',
+                            tooltip: context.s.prayerSettingsTooltip,
                           ),
                       ],
                     ),
@@ -415,12 +441,14 @@ class _PrayerCardShell extends StatelessWidget {
 class _PrayerColumn extends StatelessWidget {
   const _PrayerColumn({
     required this.entry,
+    required this.label,
     required this.isActive,
     required this.icon,
     required this.formatTime,
   });
 
   final PrayerTimeEntry entry;
+  final String label;
   final bool isActive;
   final IconData icon;
   final String Function(DateTime) formatTime;
@@ -441,7 +469,7 @@ class _PrayerColumn extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              entry.label,
+              label,
               style: AppTextStyles.caption.copyWith(
                 fontSize: 11,
                 color: Colors.white.withValues(alpha: isActive ? 1 : 0.7),
@@ -462,7 +490,11 @@ class _PrayerColumn extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Icon(icon, size: isActive ? 20 : 16, color: Colors.white.withValues(alpha: isActive ? 0.95 : 0.55)),
+          Icon(
+            icon,
+            size: isActive ? 20 : 16,
+            color: Colors.white.withValues(alpha: isActive ? 0.95 : 0.55),
+          ),
         ],
       ),
     );
@@ -489,14 +521,22 @@ class _PrayerTimesMessage extends StatelessWidget {
         Icon(icon, color: Colors.white, size: 22),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(message, style: AppTextStyles.caption.copyWith(color: Colors.white70)),
+          child: Text(
+            message,
+            style: AppTextStyles.caption.copyWith(color: Colors.white70),
+          ),
         ),
         TextButton(
           onPressed: onAction,
-          child: Text(actionLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          child: Text(
+            actionLabel,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ],
     );
   }
 }
-

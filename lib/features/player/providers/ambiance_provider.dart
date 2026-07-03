@@ -11,25 +11,29 @@ import 'player_provider.dart';
 /// Quran recitation, which keeps playing through its own separate player.
 enum AmbianceScene {
   fire(
-      label: 'Огонь',
-      icon: Iconsax.candle,
-      videoAsset: 'assets/ambiance/fire/fire_video.mp4',
-      audioAsset: 'assets/ambiance/fire/fire_audio.mp3'),
+    label: 'Огонь',
+    icon: Iconsax.candle,
+    videoAsset: 'assets/ambiance/fire/fire_video.mp4',
+    audioAsset: 'assets/ambiance/fire/fire_audio.mp3',
+  ),
   rain(
-      label: 'Дождь',
-      icon: Iconsax.drop,
-      videoAsset: 'assets/ambiance/rain/rain_video.mp4',
-      audioAsset: 'assets/ambiance/rain/rain_audio.mp3'),
+    label: 'Дождь',
+    icon: Iconsax.drop,
+    videoAsset: 'assets/ambiance/rain/rain_video.mp4',
+    audioAsset: 'assets/ambiance/rain/rain_audio.mp3',
+  ),
   bird(
-      label: 'Птица',
-      icon: Iconsax.tree,
-      videoAsset: 'assets/ambiance/bird/bird_video.mp4',
-      audioAsset: 'assets/ambiance/bird/bird_audio.mp3'),
+    label: 'Птица',
+    icon: Iconsax.tree,
+    videoAsset: 'assets/ambiance/bird/bird_video.mp4',
+    audioAsset: 'assets/ambiance/bird/bird_audio.mp3',
+  ),
   wind(
-      label: 'Ветер',
-      icon: Iconsax.wind,
-      videoAsset: 'assets/ambiance/wind/wind_video.mp4',
-      audioAsset: 'assets/ambiance/wind/wind_audio.mp3');
+    label: 'Ветер',
+    icon: Iconsax.wind,
+    videoAsset: 'assets/ambiance/wind/wind_video.mp4',
+    audioAsset: 'assets/ambiance/wind/wind_audio.mp3',
+  );
 
   const AmbianceScene({
     required this.label,
@@ -64,7 +68,10 @@ class AmbianceController extends Notifier<AmbianceScene?> {
   @override
   AmbianceScene? build() {
     // Keep the ambient noise level in sync with its slider.
-    ref.listen(ambianceNoiseVolumeProvider, (_, next) => _soundPlayer?.setVolume(next));
+    ref.listen(
+      ambianceNoiseVolumeProvider,
+      (_, next) => _soundPlayer?.setVolume(next),
+    );
     // Chain the whole ambience (video + noise) to the recitation's play/pause
     // state (only react when it actually flips, not on every position tick).
     ref.listen(playerControllerProvider, (prev, next) {
@@ -127,7 +134,9 @@ class AmbianceController extends Notifier<AmbianceScene?> {
       await video.play();
       if (!quranPlaying) await video.pause();
     } catch (e, st) {
-      debugPrint('[Ambiance] video init failed for ${scene.videoAsset}: $e\n$st');
+      debugPrint(
+        '[Ambiance] video init failed for ${scene.videoAsset}: $e\n$st',
+      );
       await video.dispose();
       return;
     }
@@ -144,7 +153,9 @@ class AmbianceController extends Notifier<AmbianceScene?> {
       await sound.setLoopMode(ja.LoopMode.one);
       await sound.setVolume(ref.read(ambianceNoiseVolumeProvider));
     } catch (e, st) {
-      debugPrint('[Ambiance] audio init failed for ${scene.audioAsset}: $e\n$st');
+      debugPrint(
+        '[Ambiance] audio init failed for ${scene.audioAsset}: $e\n$st',
+      );
     }
     if (gen != _generation) {
       await video.dispose();
@@ -208,6 +219,7 @@ class AmbianceController extends Notifier<AmbianceScene?> {
   }
 }
 
-final ambianceControllerProvider = NotifierProvider<AmbianceController, AmbianceScene?>(
-  AmbianceController.new,
-);
+final ambianceControllerProvider =
+    NotifierProvider<AmbianceController, AmbianceScene?>(
+      AmbianceController.new,
+    );

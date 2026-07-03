@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/ayah.dart';
@@ -48,7 +49,11 @@ class SurahDetailScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: SoftPalette.surface,
                         shape: BoxShape.circle,
-                        boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 4, blur: 10),
+                        boxShadow: SoftPalette.softShadow(
+                          opacity: 0.05,
+                          y: 4,
+                          blur: 10,
+                        ),
                       ),
                       child: const Icon(
                         Iconsax.arrow_left_2,
@@ -64,18 +69,26 @@ class SurahDetailScreen extends ConsumerWidget {
                       children: [
                         Text(
                           surah?.nameTransliteration ?? '',
-                          style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                          style: AppTextStyles.title.copyWith(
+                            color: SoftPalette.textDark,
+                          ),
                         ),
                         if (surah != null)
                           Text(
-                            '${surah.numberOfAyahs} аятов',
-                            style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                            context.s.ayahCount(surah.numberOfAyahs),
+                            style: AppTextStyles.caption.copyWith(
+                              color: SoftPalette.textSecondary,
+                            ),
                           ),
                       ],
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => PlayerScreen.open(context, surahNumber: surahNumber, startAyah: 1),
+                    onTap: () => PlayerScreen.open(
+                      context,
+                      surahNumber: surahNumber,
+                      startAyah: 1,
+                    ),
                     child: Container(
                       width: 44,
                       height: 44,
@@ -83,9 +96,17 @@ class SurahDetailScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: SoftPalette.primary,
                         shape: BoxShape.circle,
-                        boxShadow: SoftPalette.softShadow(opacity: 0.16, y: 6, blur: 14),
+                        boxShadow: SoftPalette.softShadow(
+                          opacity: 0.16,
+                          y: 6,
+                          blur: 14,
+                        ),
                       ),
-                      child: const Icon(Iconsax.play, color: Colors.white, size: 26),
+                      child: const Icon(
+                        Iconsax.play,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
                   ),
                 ],
@@ -99,14 +120,18 @@ class SurahDetailScreen extends ConsumerWidget {
                 error: (e, _) => Center(
                   child: Text(
                     '$e',
-                    style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: SoftPalette.textSecondary,
+                    ),
                   ),
                 ),
                 data: (ayahs) => ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                   itemCount: ayahs.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: SoftPalette.track),
-                  itemBuilder: (context, i) => _AyahTile(ayah: ayahs[i], displayMode: displayMode),
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: SoftPalette.track),
+                  itemBuilder: (context, i) =>
+                      _AyahTile(ayah: ayahs[i], displayMode: displayMode),
                 ),
               ),
             ),
@@ -125,19 +150,34 @@ class _AyahTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(progressControllerProvider.select(
-      (s) => s['${ayah.surahNumber}:${ayah.numberInSurah}'] ?? MemorizationStatus.notStarted,
-    ));
-    final isFavorite = ref.watch(favoritesControllerProvider.select((list) => list.any(
-          (f) => f.type == FavoriteType.ayah &&
+    final status = ref.watch(
+      progressControllerProvider.select(
+        (s) =>
+            s['${ayah.surahNumber}:${ayah.numberInSurah}'] ??
+            MemorizationStatus.notStarted,
+      ),
+    );
+    final isFavorite = ref.watch(
+      favoritesControllerProvider.select(
+        (list) => list.any(
+          (f) =>
+              f.type == FavoriteType.ayah &&
               f.surahNumber == ayah.surahNumber &&
               f.ayahNumberInSurah == ayah.numberInSurah,
-        )));
+        ),
+      ),
+    );
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => PlayerScreen.open(context, surahNumber: ayah.surahNumber, startAyah: ayah.numberInSurah),
-      onLongPress: () => ref.read(progressControllerProvider.notifier).cycleStatus(ayah.surahNumber, ayah.numberInSurah),
+      onTap: () => PlayerScreen.open(
+        context,
+        surahNumber: ayah.surahNumber,
+        startAyah: ayah.numberInSurah,
+      ),
+      onLongPress: () => ref
+          .read(progressControllerProvider.notifier)
+          .cycleStatus(ayah.surahNumber, ayah.numberInSurah),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         child: Row(
@@ -154,24 +194,33 @@ class _AyahTile extends ConsumerWidget {
                       '${ayah.textArabic} ﴿${ayah.numberInSurah}﴾',
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
-                      style: AppTextStyles.arabic.copyWith(color: SoftPalette.textDark),
+                      style: AppTextStyles.arabic.copyWith(
+                        color: SoftPalette.textDark,
+                      ),
                     ),
-                  if (displayMode == DisplayMode.both) const SizedBox(height: 6),
-                  if (displayMode != DisplayMode.arabic && ayah.textTransliteration != null)
+                  if (displayMode == DisplayMode.both)
+                    const SizedBox(height: 6),
+                  if (displayMode != DisplayMode.arabic &&
+                      ayah.textTransliteration != null)
                     Text(
                       ayah.textTransliteration!,
-                      style: AppTextStyles.transliteration.copyWith(color: SoftPalette.textSecondary),
+                      style: AppTextStyles.transliteration.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                 ],
               ),
             ),
             IconButton(
               visualDensity: VisualDensity.compact,
-              onPressed: () =>
-                  ref.read(favoritesControllerProvider.notifier).toggleAyah(ayah.surahNumber, ayah.numberInSurah),
+              onPressed: () => ref
+                  .read(favoritesControllerProvider.notifier)
+                  .toggleAyah(ayah.surahNumber, ayah.numberInSurah),
               icon: Icon(
                 isFavorite ? Iconsax.star1 : Iconsax.star,
-                color: isFavorite ? const Color(0xFFE0A83F) : SoftPalette.textSecondary,
+                color: isFavorite
+                    ? const Color(0xFFE0A83F)
+                    : SoftPalette.textSecondary,
                 size: 20,
               ),
             ),
@@ -195,7 +244,11 @@ class _StatusDot extends StatelessWidget {
     };
     return Padding(
       padding: const EdgeInsets.only(top: 6),
-      child: Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
     );
   }
 }

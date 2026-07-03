@@ -43,7 +43,8 @@ class RootShell extends ConsumerWidget {
                   const MiniPlayerBar(),
                   GlassNavBar(
                     currentIndex: index,
-                    onTap: (i) => ref.read(_rootTabIndexProvider.notifier).state = i,
+                    onTap: (i) =>
+                        ref.read(_rootTabIndexProvider.notifier).state = i,
                   ),
                 ],
               ),

@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/providers.dart';
@@ -19,6 +20,7 @@ class SurahsBrowseScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final surahsAsync = ref.watch(filteredSurahsProvider);
     final reciter = ref.watch(selectedReciterProvider);
 
@@ -42,7 +44,11 @@ class SurahsBrowseScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: SoftPalette.surface,
                         shape: BoxShape.circle,
-                        boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 4, blur: 10),
+                        boxShadow: SoftPalette.softShadow(
+                          opacity: 0.05,
+                          y: 4,
+                          blur: 10,
+                        ),
                       ),
                       child: const Icon(
                         Iconsax.arrow_left_2,
@@ -57,12 +63,16 @@ class SurahsBrowseScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Суры',
-                          style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                          s.surahs,
+                          style: AppTextStyles.title.copyWith(
+                            color: SoftPalette.textDark,
+                          ),
                         ),
                         Text(
                           reciter.name,
-                          style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                          style: AppTextStyles.caption.copyWith(
+                            color: SoftPalette.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -77,7 +87,8 @@ class SurahsBrowseScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: _SearchField(
-                onChanged: (v) => ref.read(surahSearchQueryProvider.notifier).state = v,
+                onChanged: (v) =>
+                    ref.read(surahSearchQueryProvider.notifier).state = v,
               ),
             ),
             Expanded(
@@ -89,9 +100,11 @@ class SurahsBrowseScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Не удалось загрузить Коран.\nПроверьте подключение к интернету.\n$err',
+                      '${s.quranLoadError}\n$err',
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -99,18 +112,23 @@ class SurahsBrowseScreen extends ConsumerWidget {
                   if (surahs.isEmpty) {
                     return Center(
                       child: Text(
-                        'Ничего не найдено',
-                        style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                        s.nothingFound,
+                        style: AppTextStyles.caption.copyWith(
+                          color: SoftPalette.textSecondary,
+                        ),
                       ),
                     );
                   }
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
                     itemCount: surahs.length,
-                    separatorBuilder: (_, __) => Divider(height: 1, color: SoftPalette.track),
+                    separatorBuilder: (_, _) =>
+                        Divider(height: 1, color: SoftPalette.track),
                     itemBuilder: (context, i) {
                       final surah = surahs[i];
-                      final isDownloaded = ref.watch(audioRepositoryProvider).isSurahDownloaded(
+                      final isDownloaded = ref
+                          .watch(audioRepositoryProvider)
+                          .isSurahDownloaded(
                             reciterFolder: reciter.folder,
                             surahNumber: surah.number,
                             ayahCount: surah.numberOfAyahs,
@@ -119,7 +137,10 @@ class SurahsBrowseScreen extends ConsumerWidget {
                         surah: surah,
                         isDownloaded: isDownloaded,
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => SurahDetailScreen(surahNumber: surah.number)),
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SurahDetailScreen(surahNumber: surah.number),
+                          ),
                         ),
                       );
                     },
@@ -149,7 +170,11 @@ class _LastReadCard extends ConsumerWidget {
     final surah = quranRepo.getSurah(surahNumber);
 
     return GestureDetector(
-      onTap: () => PlayerScreen.open(context, surahNumber: surahNumber, startAyah: ayahNumber),
+      onTap: () => PlayerScreen.open(
+        context,
+        surahNumber: surahNumber,
+        startAyah: ayahNumber,
+      ),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
@@ -192,10 +217,14 @@ class _LastReadCard extends ConsumerWidget {
                         children: [
                           Row(
                             children: [
-                              const Icon(FlutterIslamicIcons.quran, color: Colors.white, size: 16),
+                              const Icon(
+                                FlutterIslamicIcons.quran,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Text(
-                                'Последнее чтение',
+                                context.s.lastReading,
                                 style: AppTextStyles.caption.copyWith(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontWeight: FontWeight.w600,
@@ -206,11 +235,13 @@ class _LastReadCard extends ConsumerWidget {
                           const SizedBox(height: 14),
                           Text(
                             surah.nameTransliteration,
-                            style: AppTextStyles.title.copyWith(color: Colors.white),
+                            style: AppTextStyles.title.copyWith(
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Аят $ayahNumber',
+                            context.s.ayah(ayahNumber),
                             style: AppTextStyles.caption.copyWith(
                               color: Colors.white.withValues(alpha: 0.8),
                             ),
@@ -268,9 +299,15 @@ class _SearchField extends StatelessWidget {
         style: AppTextStyles.body.copyWith(color: SoftPalette.textDark),
         cursorColor: SoftPalette.primary,
         decoration: InputDecoration(
-          hintText: 'Поиск суры',
-          hintStyle: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
-          prefixIcon: const Icon(Iconsax.search_normal_1, color: SoftPalette.primary, size: 20),
+          hintText: context.s.searchSurah,
+          hintStyle: AppTextStyles.caption.copyWith(
+            color: SoftPalette.textSecondary,
+          ),
+          prefixIcon: const Icon(
+            Iconsax.search_normal_1,
+            color: SoftPalette.primary,
+            size: 20,
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),

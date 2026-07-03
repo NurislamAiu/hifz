@@ -21,11 +21,17 @@ class AudioRepository {
 
   final Dio _dio;
 
-  String _absolutePath(String reciterFolder, int surahNumber, int ayahNumberInSurah) =>
+  String _absolutePath(
+    String reciterFolder,
+    int surahNumber,
+    int ayahNumberInSurah,
+  ) =>
       '${AppPaths.documentsPath}/audio/$reciterFolder/$surahNumber/$ayahNumberInSurah.mp3';
 
   Future<Directory> _audioDir(String reciterFolder, int surahNumber) async {
-    final dir = Directory('${AppPaths.documentsPath}/audio/$reciterFolder/$surahNumber');
+    final dir = Directory(
+      '${AppPaths.documentsPath}/audio/$reciterFolder/$surahNumber',
+    );
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
@@ -46,7 +52,9 @@ class AudioRepository {
     required int surahNumber,
     required int ayahNumberInSurah,
   }) {
-    return File(_absolutePath(reciterFolder, surahNumber, ayahNumberInSurah)).existsSync();
+    return File(
+      _absolutePath(reciterFolder, surahNumber, ayahNumberInSurah),
+    ).existsSync();
   }
 
   /// Downloads a single ayah's audio if not already cached. Returns the
@@ -57,7 +65,11 @@ class AudioRepository {
     required int ayahNumberInSurah,
     void Function(double progress)? onProgress,
   }) async {
-    final filePath = _absolutePath(reciterFolder, surahNumber, ayahNumberInSurah);
+    final filePath = _absolutePath(
+      reciterFolder,
+      surahNumber,
+      ayahNumberInSurah,
+    );
     if (await File(filePath).exists()) {
       return filePath;
     }
@@ -105,7 +117,11 @@ class AudioRepository {
     required int ayahCount,
   }) {
     for (var i = 1; i <= ayahCount; i++) {
-      if (!isDownloaded(reciterFolder: reciterFolder, surahNumber: surahNumber, ayahNumberInSurah: i)) {
+      if (!isDownloaded(
+        reciterFolder: reciterFolder,
+        surahNumber: surahNumber,
+        ayahNumberInSurah: i,
+      )) {
         return false;
       }
     }
@@ -116,12 +132,11 @@ class AudioRepository {
     required String reciterFolder,
     required int surahNumber,
     required int ayahNumberInSurah,
-  }) =>
-      EveryAyahConstants.audioUrl(
-        reciterFolder: reciterFolder,
-        surahNumber: surahNumber,
-        ayahNumber: ayahNumberInSurah,
-      );
+  }) => EveryAyahConstants.audioUrl(
+    reciterFolder: reciterFolder,
+    surahNumber: surahNumber,
+    ayahNumber: ayahNumberInSurah,
+  );
 
   Future<void> clearAll() async {
     final dir = Directory('${AppPaths.documentsPath}/audio');
@@ -134,7 +149,9 @@ class AudioRepository {
     required String reciterFolder,
     required int surahNumber,
   }) async {
-    final dir = Directory('${AppPaths.documentsPath}/audio/$reciterFolder/$surahNumber');
+    final dir = Directory(
+      '${AppPaths.documentsPath}/audio/$reciterFolder/$surahNumber',
+    );
     if (await dir.exists()) {
       await dir.delete(recursive: true);
     }

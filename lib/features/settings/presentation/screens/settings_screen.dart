@@ -6,8 +6,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
+import '../../../../data/models/app_settings.dart';
 import '../../../../data/models/display_mode.dart';
 import '../../../../data/providers.dart';
 import '../../../home/providers/prayer_times_provider.dart';
@@ -31,12 +33,12 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _openOrNotify(
     BuildContext context,
     String url, {
-    String emptyMessage = 'Ссылка пока не настроена',
+    String? emptyMessage,
   }) async {
     if (url.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(emptyMessage)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(emptyMessage ?? context.s.linkNotConfigured)),
+      );
       return;
     }
     final uri = Uri.parse(url);
@@ -47,6 +49,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
 
@@ -57,14 +60,16 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
           children: [
             Text(
-              'Настройки',
+              s.settings,
               style: AppTextStyles.displayTitle.copyWith(
                 color: SoftPalette.textDark,
               ),
             ),
             const SizedBox(height: 24),
 
-            const _SectionLabel('ЧТЕНИЕ'),
+            _SectionLabel(s.readingSection),
+            const _SettingsCard(child: _LanguageRow()),
+            const SizedBox(height: 14),
             _ReadingSettingsCard(
               displayMode: settings.displayMode,
               playbackSpeed: settings.playbackSpeed,
@@ -73,23 +78,31 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 22),
-            const _SectionLabel('УВЕДОМЛЕНИЯ'),
-            const _SettingsCard(child: _NotificationsRow()),
+            _SectionLabel(s.notificationsSection),
+            const _SettingsCard(
+              child: Column(
+                children: [
+                  _NotificationsRow(),
+                  _RowDivider(),
+                  _RepentanceToneRow(),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 22),
-            const _SectionLabel('ХРАНИЛИЩЕ'),
+            _SectionLabel(s.storageSection),
             const _SettingsCard(child: _CacheManagementRow()),
 
             const SizedBox(height: 22),
-            const _SectionLabel('ПОДДЕРЖКА ПРОЕКТА'),
+            _SectionLabel(s.supportSection),
             _SettingsCard(
               child: Column(
                 children: [
                   _SettingsRow(
                     icon: FlutterIslamicIcons.zakat,
                     iconColor: _gold,
-                    title: 'Сделать садака',
-                    subtitle: 'Поддержать труд команды — по желанию',
+                    title: s.makeSadaqa,
+                    subtitle: s.supportTeam,
                     trailing: const Icon(
                       Iconsax.arrow_right_3,
                       color: SoftPalette.textSecondary,
@@ -105,25 +118,21 @@ class SettingsScreen extends ConsumerWidget {
                   _SettingsRow(
                     icon: Iconsax.export,
                     iconColor: SoftPalette.primary,
-                    title: 'Поделиться приложением',
+                    title: s.shareApp,
                     trailing: const Icon(
                       Iconsax.arrow_right_3,
                       color: SoftPalette.textSecondary,
                       size: 18,
                     ),
                     onTap: () => SharePlus.instance.share(
-                      ShareParams(
-                        text:
-                            'Hifz — бесплатное приложение для заучивания Корана на слух. '
-                            'Без рекламы, без подписок.',
-                      ),
+                      ShareParams(text: s.shareText),
                     ),
                   ),
                   const _RowDivider(),
                   _SettingsRow(
                     icon: Iconsax.star1,
                     iconColor: _gold,
-                    title: 'Оценить приложение',
+                    title: s.rateApp,
                     trailing: const Icon(
                       Iconsax.arrow_right_3,
                       color: SoftPalette.textSecondary,
@@ -132,7 +141,7 @@ class SettingsScreen extends ConsumerWidget {
                     onTap: () => _openOrNotify(
                       context,
                       _storeUrl,
-                      emptyMessage: 'Приложение пока не опубликовано в сторе',
+                      emptyMessage: s.appNotPublished,
                     ),
                   ),
                 ],
@@ -140,23 +149,12 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 22),
-            const _SectionLabel('О ПРИЛОЖЕНИИ'),
-            const _SettingsCard(
+            _SectionLabel(s.aboutSection),
+            _SettingsCard(
               child: Column(
                 children: [
-                  _VersionRow(),
-                  _RowDivider(),
-                  _SettingsRow(
-                    icon: Iconsax.moon,
-                    iconColor: SoftPalette.textSecondary,
-                    title: 'Тёмная тема',
-                    subtitle: 'Светлая появится позже',
-                    trailing: Switch(
-                      value: true,
-                      onChanged: null,
-                      activeThumbColor: SoftPalette.primary,
-                    ),
-                  ),
+                  const _VersionRow(),
+
                 ],
               ),
             ),
@@ -182,16 +180,14 @@ class _ReadingSettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     return _SettingsCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _MiniHeader(
-              icon: Iconsax.translate,
-              title: 'Отображение текста',
-            ),
+            _MiniHeader(icon: Iconsax.translate, title: s.displayText),
             const SizedBox(height: 12),
             _DisplayModeSwitcher(
               current: displayMode,
@@ -200,10 +196,7 @@ class _ReadingSettingsCard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                const _MiniHeader(
-                  icon: Iconsax.speedometer,
-                  title: 'Скорость по умолчанию',
-                ),
+                _MiniHeader(icon: Iconsax.speedometer, title: s.defaultSpeed),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -255,7 +248,7 @@ class _ReadingSettingsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'обычно',
+                    s.normal,
                     style: AppTextStyles.caption.copyWith(
                       color: SoftPalette.textSecondary,
                     ),
@@ -301,6 +294,126 @@ class _MiniHeader extends StatelessWidget {
   }
 }
 
+class _LanguageRow extends ConsumerWidget {
+  const _LanguageRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(
+      settingsControllerProvider.select(
+        (settings) => AppLanguage.fromCode(settings.appLanguageCode),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: SoftPalette.primary.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Iconsax.language_square,
+                  color: SoftPalette.primary,
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.s.appLanguage,
+                      style: AppTextStyles.body.copyWith(
+                        color: SoftPalette.textDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.s.appLanguageSubtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _LanguageSwitcher(
+            current: language,
+            onChanged: (language) => ref
+                .read(settingsControllerProvider.notifier)
+                .setAppLanguageCode(language.code),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageSwitcher extends StatelessWidget {
+  const _LanguageSwitcher({required this.current, required this.onChanged});
+
+  final AppLanguage current;
+  final ValueChanged<AppLanguage> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, AppLanguage language) {
+      final selected = current == language;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(language),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: BoxDecoration(
+              color: selected ? SoftPalette.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: selected ? Colors.white : SoftPalette.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SoftPalette.light,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Row(
+        children: [
+          chip(context.s.russian, AppLanguage.ru),
+          const SizedBox(width: 4),
+          chip(context.s.kazakh, AppLanguage.kk),
+        ],
+      ),
+    );
+  }
+}
+
 class _DisplayModeSwitcher extends StatelessWidget {
   const _DisplayModeSwitcher({required this.current, required this.onChanged});
   final DisplayMode current;
@@ -342,11 +455,11 @@ class _DisplayModeSwitcher extends StatelessWidget {
       ),
       child: Row(
         children: [
-          chip('Араб.', DisplayMode.arabic),
+          chip(context.s.arabicShort, DisplayMode.arabic),
           const SizedBox(width: 4),
-          chip('Транслит.', DisplayMode.transliteration),
+          chip(context.s.transliterationShort, DisplayMode.transliteration),
           const SizedBox(width: 4),
-          chip('Оба', DisplayMode.both),
+          chip(context.s.both, DisplayMode.both),
         ],
       ),
     );
@@ -373,21 +486,27 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
       if (!granted) {
         if (mounted) {
           setState(() => _busy = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Разрешите уведомления в настройках устройства'),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.s.allowNotifications)));
         }
         return;
       }
       await controller.setNotificationsEnabled(true);
-      await notificationRepo.scheduleHourlyRepentanceReminders();
+      await notificationRepo.scheduleDailyRepentanceReminders(
+        tone: ref.read(settingsControllerProvider).repentanceReminderTone,
+        language: AppLanguage.fromCode(
+          ref.read(settingsControllerProvider).appLanguageCode,
+        ),
+      );
       final prayerTimes = ref.read(prayerTimesProvider).valueOrNull;
       if (prayerTimes != null) {
         await notificationRepo.scheduleTodayPrayerNotifications(
           prayerTimes,
           disabledKeys: ref.read(settingsControllerProvider).disabledPrayerKeys,
+          language: AppLanguage.fromCode(
+            ref.read(settingsControllerProvider).appLanguageCode,
+          ),
         );
       }
     } else {
@@ -407,8 +526,8 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
     return _SettingsRow(
       icon: Iconsax.notification,
       iconColor: SoftPalette.primary,
-      title: 'Напоминания',
-      subtitle: 'Намазы и ежечасные аяты о покаянии',
+      title: context.s.reminders,
+      subtitle: context.s.remindersSubtitle,
       trailing: _busy
           ? const SizedBox(
               width: 20,
@@ -423,6 +542,152 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
               onChanged: _onChanged,
               activeThumbColor: SoftPalette.primary,
             ),
+    );
+  }
+}
+
+class _RepentanceToneRow extends ConsumerStatefulWidget {
+  const _RepentanceToneRow();
+
+  @override
+  ConsumerState<_RepentanceToneRow> createState() => _RepentanceToneRowState();
+}
+
+class _RepentanceToneRowState extends ConsumerState<_RepentanceToneRow> {
+  bool _busy = false;
+
+  Future<void> _onChanged(RepentanceReminderTone tone) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final controller = ref.read(settingsControllerProvider.notifier);
+    await controller.setRepentanceReminderTone(tone);
+
+    final settings = ref.read(settingsControllerProvider);
+    if (settings.notificationsEnabled ?? false) {
+      await ref
+          .read(notificationRepositoryProvider)
+          .scheduleDailyRepentanceReminders(
+            tone: tone,
+            language: AppLanguage.fromCode(settings.appLanguageCode),
+          );
+    }
+
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = ref.watch(
+      settingsControllerProvider.select(
+        (settings) => settings.repentanceReminderTone,
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _gold.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Iconsax.message_question, color: _gold, size: 19),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.s.repentanceTone,
+                      style: AppTextStyles.body.copyWith(
+                        color: SoftPalette.textDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.s.repentanceToneSubtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_busy)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: SoftPalette.primary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _ReminderToneSwitcher(current: tone, onChanged: _onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReminderToneSwitcher extends StatelessWidget {
+  const _ReminderToneSwitcher({required this.current, required this.onChanged});
+
+  final RepentanceReminderTone current;
+  final ValueChanged<RepentanceReminderTone> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, RepentanceReminderTone tone) {
+      final selected = current == tone;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(tone),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: BoxDecoration(
+              color: selected ? SoftPalette.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: selected ? Colors.white : SoftPalette.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SoftPalette.light,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Row(
+        children: [
+          chip(context.s.gentle, RepentanceReminderTone.gentle),
+          const SizedBox(width: 4),
+          chip(context.s.firm, RepentanceReminderTone.firm),
+        ],
+      ),
     );
   }
 }
@@ -460,8 +725,8 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
     return _SettingsRow(
       icon: Iconsax.music_play,
       iconColor: SoftPalette.primary,
-      title: 'Скачанные аяты',
-      subtitle: _bytes == null ? 'Подсчёт…' : _format(_bytes!),
+      title: context.s.downloadedAyahs,
+      subtitle: _bytes == null ? context.s.counting : _format(_bytes!),
       trailing: _clearing
           ? const SizedBox(
               width: 20,
@@ -478,9 +743,12 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
                 await _refresh();
                 if (mounted) setState(() => _clearing = false);
               },
-              child: const Text(
-                'Очистить',
-                style: TextStyle(color: _danger, fontWeight: FontWeight.w700),
+              child: Text(
+                context.s.clear,
+                style: const TextStyle(
+                  color: _danger,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
     );
@@ -502,7 +770,7 @@ class _VersionRow extends StatelessWidget {
         return _SettingsRow(
           icon: Iconsax.info_circle,
           iconColor: SoftPalette.textSecondary,
-          title: 'Версия',
+          title: context.s.version,
           trailing: Text(
             value,
             style: AppTextStyles.caption.copyWith(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/surah.dart';
@@ -56,7 +57,10 @@ class SurahListTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${(surah.revelationType == 'Meccan' ? 'МЕККАНСКАЯ' : 'МЕДИНСКАЯ')} • ${surah.numberOfAyahs} АЯТОВ',
+                    context.s.surahMeta(
+                      surah.revelationType,
+                      surah.numberOfAyahs,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.caption.copyWith(
@@ -145,7 +149,11 @@ class _NumberSeal extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: SoftPalette.surface, width: 1.5),
                 ),
-                child: const Icon(Iconsax.tick_circle, size: 10, color: Colors.white),
+                child: const Icon(
+                  Iconsax.tick_circle,
+                  size: 10,
+                  color: Colors.white,
+                ),
               ),
             ),
         ],

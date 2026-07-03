@@ -81,7 +81,10 @@ class _AuroraBackgroundState extends State<AuroraBackground>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 38))..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 38),
+    )..repeat();
   }
 
   @override
@@ -105,13 +108,22 @@ class _AuroraBackgroundState extends State<AuroraBackground>
                   for (final blob in _blobs)
                     Align(
                       alignment: Alignment(
-                        (blob.base.x + blob.ampX * math.sin(t * blob.freqX + blob.phase)).clamp(-1.6, 1.6),
-                        (blob.base.y + blob.ampY * math.cos(t * blob.freqY + blob.phase)).clamp(-1.6, 1.6),
+                        (blob.base.x +
+                                blob.ampX *
+                                    math.sin(t * blob.freqX + blob.phase))
+                            .clamp(-1.6, 1.6),
+                        (blob.base.y +
+                                blob.ampY *
+                                    math.cos(t * blob.freqY + blob.phase))
+                            .clamp(-1.6, 1.6),
                       ),
                       child: Container(
                         width: blob.size,
                         height: blob.size,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: blob.color.withValues(alpha: 0.32)),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: blob.color.withValues(alpha: 0.32),
+                        ),
                       ),
                     ),
                 ],

@@ -38,7 +38,10 @@ class Ayah {
     required this.page,
   });
 
-  factory Ayah.fromApiJson(Map<String, dynamic> json, {required int surahNumber}) {
+  factory Ayah.fromApiJson(
+    Map<String, dynamic> json, {
+    required int surahNumber,
+  }) {
     return Ayah(
       number: json['number'] as int,
       surahNumber: surahNumber,
@@ -50,12 +53,12 @@ class Ayah {
   }
 
   Ayah copyWithTransliteration(String text) => Ayah(
-        number: number,
-        surahNumber: surahNumber,
-        numberInSurah: numberInSurah,
-        textArabic: textArabic,
-        textTransliteration: text,
-        juz: juz,
-        page: page,
-      );
+    number: number,
+    surahNumber: surahNumber,
+    numberInSurah: numberInSurah,
+    textArabic: textArabic,
+    textTransliteration: text,
+    juz: juz,
+    page: page,
+  );
 }

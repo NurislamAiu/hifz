@@ -21,7 +21,11 @@ class FavoritesRepository {
     } else {
       await HiveBoxes.favorites.put(
         key,
-        FavoriteItem(type: FavoriteType.surah, surahNumber: surahNumber, addedAt: DateTime.now()),
+        FavoriteItem(
+          type: FavoriteType.surah,
+          surahNumber: surahNumber,
+          addedAt: DateTime.now(),
+        ),
       );
     }
   }

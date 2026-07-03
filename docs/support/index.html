@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="kk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hifz Support</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --accent: #1597a3;
+        --bg: #f8fbfb;
+        --text: #111819;
+        --muted: #5d6b70;
+        --line: rgba(17, 24, 25, 0.12);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #070a0b;
+          --text: #f6fbfb;
+          --muted: #a6b6bb;
+          --line: rgba(246, 251, 251, 0.14);
+        }
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      main {
+        width: min(780px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 42px 0;
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      h1 {
+        margin: 28px 0 12px;
+        font-size: clamp(36px, 7vw, 64px);
+        letter-spacing: 0;
+        line-height: 1;
+      }
+
+      h2 {
+        margin: 30px 0 10px;
+        font-size: 22px;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      .back {
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        margin-top: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="../">Hifz</a>
+      <h1>Support</h1>
+      <p>
+        Егер Hifz қолданбасында мәселе болса, төмендегі GitHub Issues беті арқылы хабарласыңыз.
+      </p>
+      <p>
+        Если у вас возникла проблема с приложением Hifz, напишите через GitHub Issues ниже.
+      </p>
+
+      <div class="card">
+        <h2>Contact</h2>
+        <p>
+          Support:
+          <a href="https://github.com/NurislamAiu/hifz/issues">github.com/NurislamAiu/hifz/issues</a>
+        </p>
+      </div>
+
+      <h2>Before contacting support</h2>
+      <ul>
+        <li>Қолданбаның соңғы нұсқасын орнатыңыз.</li>
+        <li>Интернет байланысын тексеріңіз, әсіресе аудио жүктеу кезінде.</li>
+        <li>Мәселені түсіндіріп, құрылғы моделін және iOS нұсқасын жазыңыз.</li>
+      </ul>
+
+      <h2>Перед обращением</h2>
+      <ul>
+        <li>Установите последнюю версию приложения.</li>
+        <li>Проверьте интернет-соединение, особенно при загрузке аудио.</li>
+        <li>Опишите проблему, модель устройства и версию iOS.</li>
+      </ul>
+    </main>
+  </body>
+</html>

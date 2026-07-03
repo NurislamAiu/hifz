@@ -9,12 +9,15 @@ import '../models/surah.dart';
 /// by [QuranRepository].
 class QuranApiClient {
   QuranApiClient({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               baseUrl: QuranApiConstants.baseUrl,
               connectTimeout: AppConstants.networkTimeout,
               receiveTimeout: AppConstants.networkTimeout,
-            ));
+            ),
+          );
 
   final Dio _dio;
 
@@ -36,7 +39,12 @@ class QuranApiClient {
       final surahNumber = surahMap['number'] as int;
       final ayahsJson = surahMap['ayahs'] as List<dynamic>;
       result[surahNumber] = ayahsJson
-          .map((a) => Ayah.fromApiJson(a as Map<String, dynamic>, surahNumber: surahNumber))
+          .map(
+            (a) => Ayah.fromApiJson(
+              a as Map<String, dynamic>,
+              surahNumber: surahNumber,
+            ),
+          )
           .toList();
     }
     return result;
@@ -45,7 +53,9 @@ class QuranApiClient {
   /// Returns transliteration text for every ayah, grouped by surah number,
   /// in `numberInSurah` order.
   Future<Map<int, List<String>>> fetchFullQuranTransliteration() async {
-    final response = await _dio.get(QuranApiConstants.transliterationEditionPath);
+    final response = await _dio.get(
+      QuranApiConstants.transliterationEditionPath,
+    );
     final surahs = response.data['data']['surahs'] as List<dynamic>;
     final result = <int, List<String>>{};
     for (final surahJson in surahs) {

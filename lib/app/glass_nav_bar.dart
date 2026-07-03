@@ -3,25 +3,31 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 
+import '../core/localization/app_strings.dart';
 import '../core/theme/app_text_styles.dart';
 import '../core/theme/soft_palette.dart';
 
 class GlassNavBar extends StatelessWidget {
-  const GlassNavBar({super.key, required this.currentIndex, required this.onTap});
+  const GlassNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  static const _items = [
-    (icon: Iconsax.home_2, label: 'Главная'),
-    (icon: Iconsax.chart_2, label: 'Статистика'),
-    (icon: FlutterIslamicIcons.quran, label: 'Чтецы'),
-    (icon: Iconsax.star, label: 'Избранное'),
-    (icon: Iconsax.setting_2, label: 'Настройки'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
+    final items = [
+      (icon: Iconsax.home_2, label: s.navHome),
+      (icon: Iconsax.chart_2, label: s.navStats),
+      (icon: FlutterIslamicIcons.quran, label: s.navReciters),
+      (icon: Iconsax.star, label: s.navFavorites),
+      (icon: Iconsax.setting_2, label: s.navSettings),
+    ];
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
       decoration: BoxDecoration(
@@ -39,9 +45,9 @@ class GlassNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          for (var i = 0; i < _items.length; i++)
+          for (var i = 0; i < items.length; i++)
             _NavItem(
-              item: _items[i],
+              item: items[i],
               selected: i == currentIndex,
               onTap: () {
                 if (i != currentIndex) HapticFeedback.selectionClick();
@@ -55,7 +61,11 @@ class GlassNavBar extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({required this.item, required this.selected, required this.onTap});
+  const _NavItem({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
   final ({IconData icon, String label}) item;
   final bool selected;
@@ -69,7 +79,10 @@ class _NavItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(horizontal: selected ? 16 : 12, vertical: 11),
+        padding: EdgeInsets.symmetric(
+          horizontal: selected ? 16 : 12,
+          vertical: 11,
+        ),
         decoration: BoxDecoration(
           color: selected ? SoftPalette.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(22),

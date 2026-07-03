@@ -7,11 +7,13 @@ import '../models/surah.dart';
 /// local Hive cache afterwards. No network call happens if the cache is
 /// already populated.
 class QuranRepository {
-  QuranRepository({QuranApiClient? apiClient}) : _api = apiClient ?? QuranApiClient();
+  QuranRepository({QuranApiClient? apiClient})
+    : _api = apiClient ?? QuranApiClient();
 
   final QuranApiClient _api;
 
-  bool get isCached => HiveBoxes.surahs.isNotEmpty && HiveBoxes.ayahs.isNotEmpty;
+  bool get isCached =>
+      HiveBoxes.surahs.isNotEmpty && HiveBoxes.ayahs.isNotEmpty;
 
   List<Surah> getSurahs() {
     final surahs = HiveBoxes.surahs.values.toList()
@@ -24,10 +26,11 @@ class QuranRepository {
   List<Ayah> getAllAyahs() => HiveBoxes.ayahs.values.toList();
 
   List<Ayah> getAyahsForSurah(int surahNumber) {
-    final ayahs = HiveBoxes.ayahs.values
-        .where((a) => a.surahNumber == surahNumber)
-        .toList()
-      ..sort((a, b) => a.numberInSurah.compareTo(b.numberInSurah));
+    final ayahs =
+        HiveBoxes.ayahs.values
+            .where((a) => a.surahNumber == surahNumber)
+            .toList()
+          ..sort((a, b) => a.numberInSurah.compareTo(b.numberInSurah));
     return ayahs;
   }
 
@@ -49,9 +52,12 @@ class QuranRepository {
       final surahNumber = entry.key;
       final transliterations = transliterationBySurah[surahNumber];
       for (final ayah in entry.value) {
-        final withTransliteration = transliterations != null &&
+        final withTransliteration =
+            transliterations != null &&
                 transliterations.length >= ayah.numberInSurah
-            ? ayah.copyWithTransliteration(transliterations[ayah.numberInSurah - 1])
+            ? ayah.copyWithTransliteration(
+                transliterations[ayah.numberInSurah - 1],
+              )
             : ayah;
         ayahsMap[ayah.number] = withTransliteration;
       }

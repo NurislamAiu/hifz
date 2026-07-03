@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/providers.dart';
 import '../../../progress/presentation/screens/progress_screen.dart';
@@ -35,10 +36,9 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
     super.dispose();
   }
 
-  static const _weekLabels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     final repo = ref.watch(listeningStatsRepositoryProvider);
     final settings = ref.watch(settingsControllerProvider);
     final listeningGoalMinutes = settings.listeningGoalMinutes;
@@ -55,14 +55,21 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Статистика', style: AppTextStyles.title.copyWith(color: SoftPalette.textDark)),
+            Text(
+              s.statistics,
+              style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+            ),
             GestureDetector(
               onTap: () => Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const ProgressScreen())),
-              child: const Text(
-                'Подробнее',
-                style: TextStyle(color: SoftPalette.primary, fontSize: 14, fontWeight: FontWeight.w600),
+              child: Text(
+                s.details,
+                style: const TextStyle(
+                  color: SoftPalette.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -72,19 +79,26 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           children: [
             Expanded(
               child: _StatChip(
-                value: '${repo.currentStreak(goalSeconds: listeningGoalSeconds)} дн',
-                label: 'Стрик',
+                value: s.daysShort(
+                  repo.currentStreak(goalSeconds: listeningGoalSeconds),
+                ),
+                label: s.streak,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _StatChip(value: '$weekMinutes мин', label: 'Эта неделя'),
+              child: _StatChip(
+                value: s.weekMinuteValue(weekMinutes),
+                label: s.thisWeek,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _StatChip(
-                value: '${repo.recordStreak(goalSeconds: listeningGoalSeconds)} дн',
-                label: 'Рекорд',
+                value: s.daysShort(
+                  repo.recordStreak(goalSeconds: listeningGoalSeconds),
+                ),
+                label: s.record,
               ),
             ),
           ],
@@ -95,8 +109,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
             Expanded(
               child: _GoalPill(
                 icon: Iconsax.headphone,
-                label: 'Слушать',
-                value: '$listeningGoalMinutes мин',
+                label: s.listen,
+                value: s.durationMinutes(listeningGoalMinutes),
               ),
             ),
             const SizedBox(width: 10),
@@ -135,15 +149,19 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             strokeWidth: 12,
                             strokeCap: StrokeCap.round,
                             backgroundColor: Colors.white,
-                            valueColor: const AlwaysStoppedAnimation(SoftPalette.primary),
+                            valueColor: const AlwaysStoppedAnimation(
+                              SoftPalette.primary,
+                            ),
                           ),
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Слушание сегодня',
-                              style: AppTextStyles.caption.copyWith(color: SoftPalette.primaryDark),
+                              s.listeningToday,
+                              style: AppTextStyles.caption.copyWith(
+                                color: SoftPalette.primaryDark,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -155,8 +173,10 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'цель $listeningGoalMinutes мин',
-                              style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                              s.goalMinutes(listeningGoalMinutes),
+                              style: AppTextStyles.caption.copyWith(
+                                color: SoftPalette.textSecondary,
+                              ),
                             ),
                           ],
                         ),
@@ -171,7 +191,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                 children: [
                   for (var i = 0; i < 7; i++)
                     _WeekDay(
-                      label: _weekLabels[i],
+                      label: s.weekLabels[i],
                       status: weekStatus[i],
                       isToday: i == todayIndex,
                     ),
@@ -220,13 +240,18 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Цели на день',
-                              style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
+                              context.s.dailyGoals,
+                              style: AppTextStyles.title.copyWith(
+                                color: SoftPalette.textDark,
+                              ),
                             ),
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(sheetContext).pop(),
-                            icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
+                            icon: const Icon(
+                              Iconsax.close_circle,
+                              color: SoftPalette.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -236,12 +261,19 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           Container(
                             width: 34,
                             height: 34,
-                            decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-                            child: const Icon(Iconsax.headphone, color: SoftPalette.primary, size: 18),
+                            decoration: const BoxDecoration(
+                              color: SoftPalette.light,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Iconsax.headphone,
+                              color: SoftPalette.primary,
+                              size: 18,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            'Слушать в день',
+                            context.s.listenPerDay,
                             style: AppTextStyles.body.copyWith(
                               color: SoftPalette.textDark,
                               fontWeight: FontWeight.w700,
@@ -252,7 +284,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                       const SizedBox(height: 8),
                       _GoalWheel(
                         minutes: listening,
-                        onChanged: (value) => setSheetState(() => listening = value),
+                        onChanged: (value) =>
+                            setSheetState(() => listening = value),
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
@@ -261,16 +294,22 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           style: FilledButton.styleFrom(
                             backgroundColor: SoftPalette.primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                           ),
                           onPressed: () async {
-                            final controller = ref.read(settingsControllerProvider.notifier);
-                            await controller.setDailyListeningGoalMinutes(listening);
+                            final controller = ref.read(
+                              settingsControllerProvider.notifier,
+                            );
+                            await controller.setDailyListeningGoalMinutes(
+                              listening,
+                            );
                             if (sheetContext.mounted) {
                               Navigator.of(sheetContext).pop();
                             }
                           },
-                          child: const Text('Сохранить'),
+                          child: Text(context.s.save),
                         ),
                       ),
                     ],
@@ -303,10 +342,18 @@ class _StatChip extends StatelessWidget {
         children: [
           Text(
             value,
-            style: AppTextStyles.title.copyWith(fontSize: 17, color: SoftPalette.primary),
+            style: AppTextStyles.title.copyWith(
+              fontSize: 17,
+              color: SoftPalette.primary,
+            ),
           ),
           const SizedBox(height: 3),
-          Text(label, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: SoftPalette.textSecondary,
+            ),
+          ),
         ],
       ),
     );
@@ -338,7 +385,10 @@ class _GoalPill extends StatelessWidget {
           Container(
             width: 34,
             height: 34,
-            decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: SoftPalette.light,
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: SoftPalette.primary, size: 18),
           ),
           const SizedBox(width: 10),
@@ -346,10 +396,20 @@ class _GoalPill extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary, fontSize: 11)),
+                Text(
+                  label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: SoftPalette.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
                 Text(
                   value,
-                  style: AppTextStyles.body.copyWith(color: SoftPalette.textDark, fontWeight: FontWeight.w700, fontSize: 13),
+                  style: AppTextStyles.body.copyWith(
+                    color: SoftPalette.textDark,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -375,7 +435,7 @@ class _TuneButton extends StatelessWidget {
       child: IconButton(
         onPressed: onPressed,
         icon: const Icon(Iconsax.setting_4, color: Colors.white),
-        tooltip: 'Изменить цели',
+        tooltip: context.s.editGoals,
       ),
     );
   }
@@ -452,11 +512,15 @@ class _GoalWheelState extends State<_GoalWheel> {
                   final selected = value == widget.minutes;
                   return Center(
                     child: Text(
-                      '$value мин',
+                      context.s.durationMinutes(value),
                       style: AppTextStyles.title.copyWith(
                         fontSize: selected ? 21 : 17,
-                        color: selected ? SoftPalette.primary : SoftPalette.textSecondary,
-                        fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                        color: selected
+                            ? SoftPalette.primary
+                            : SoftPalette.textSecondary,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w500,
                       ),
                     ),
                   );
@@ -492,7 +556,9 @@ class _WeekDay extends StatelessWidget {
         shape: BoxShape.circle,
         color: done ? SoftPalette.primary : Colors.white,
         border: Border.all(
-          color: done ? SoftPalette.primary : (isToday ? SoftPalette.primary : SoftPalette.track),
+          color: done
+              ? SoftPalette.primary
+              : (isToday ? SoftPalette.primary : SoftPalette.track),
           width: isToday && !done ? 2 : 1,
         ),
       ),
