@@ -142,6 +142,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -164,9 +165,24 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   },
                 ),
               if (ambianceScene != null)
-                BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                  child: Container(color: SoftPalette.background.withValues(alpha: 0.42)),
+                Positioned.fill(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.22),
+                            Colors.black.withValues(alpha: 0.34),
+                            Colors.black.withValues(alpha: 0.5),
+                          ],
+                          stops: const [0.0, 0.55, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               SafeArea(
                 bottom: false,
@@ -200,6 +216,13 @@ class _PlayerContent extends ConsumerWidget {
     final displayMode = ref.watch(settingsControllerProvider).displayMode;
     final ayah = state.currentAyah;
 
+    // When the ambient video background is on, the sheet turns dark, so switch
+    // text and controls to light colors for contrast.
+    final onDark = ref.watch(ambianceControllerProvider) != null;
+    final primaryText = onDark ? Colors.white : SoftPalette.textDark;
+    final secondaryText = onDark ? Colors.white : SoftPalette.textDark;
+    final accent = onDark ? Colors.white : SoftPalette.primary;
+
     final isFavorite = ref.watch(favoritesControllerProvider.select((list) => list.any(
           (f) => f.type == FavoriteType.ayah && f.surahNumber == ayah.surahNumber && f.ayahNumberInSurah == ayah.numberInSurah,
         )));
@@ -210,41 +233,50 @@ class _PlayerContent extends ConsumerWidget {
         Container(
           width: 36,
           height: 4,
-          decoration: BoxDecoration(color: SoftPalette.track, borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(
+            color: onDark ? Colors.white.withValues(alpha: 0.55) : SoftPalette.track,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
         const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: SoftPalette.light,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            'Аят ${ayah.numberInSurah} из ${state.ayahs.length}',
-            style: AppTextStyles.caption.copyWith(
-              color: SoftPalette.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                state.surahNameTransliteration,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.displayTitle.copyWith(color: SoftPalette.textDark),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      state.surahNameTransliteration,
+                      style: AppTextStyles.displayTitle.copyWith(color: primaryText),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      state.surahNameArabic,
+                      style: AppTextStyles.arabic.copyWith(
+                        fontSize: 20,
+                        height: 1.2,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                state.surahNameArabic,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.arabic.copyWith(
-                  fontSize: 22,
-                  height: 1.2,
-                  color: SoftPalette.primary,
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: onDark ? Colors.white.withValues(alpha: 0.16) : SoftPalette.light,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${ayah.numberInSurah}:${state.ayahs.length}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: onDark ? Colors.white : SoftPalette.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -261,14 +293,14 @@ class _PlayerContent extends ConsumerWidget {
                     '${ayah.textArabic} ﴿${ayah.numberInSurah}﴾',
                     textAlign: TextAlign.center,
                     textDirection: TextDirection.rtl,
-                    style: AppTextStyles.arabic.copyWith(color: SoftPalette.textDark),
+                    style: AppTextStyles.arabic.copyWith(color: primaryText),
                   ),
                 if (displayMode == DisplayMode.both) const SizedBox(height: 12),
                 if (displayMode != DisplayMode.arabic && ayah.textTransliteration != null)
                   Text(
                     ayah.textTransliteration!,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.transliteration.copyWith(color: SoftPalette.textSecondary),
+                    style: AppTextStyles.transliteration.copyWith(color: secondaryText),
                   ),
               ],
             ),
@@ -278,7 +310,7 @@ class _PlayerContent extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Row(
             children: [
-              const _ReciterAvatar(),
+              _ReciterAvatar(onDark: onDark),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -288,14 +320,14 @@ class _PlayerContent extends ConsumerWidget {
                       reciter.name,
                       style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: SoftPalette.textDark,
+                        color: primaryText,
                       ),
                     ),
                     Text(
                       reciter.nameArabic,
                       style: AppTextStyles.caption.copyWith(
                         fontFamily: AppTextStyles.arabicFontFamily,
-                        color: SoftPalette.textSecondary,
+                        color: secondaryText,
                       ),
                     ),
                   ],
@@ -305,7 +337,7 @@ class _PlayerContent extends ConsumerWidget {
                 onPressed: () => ref.read(favoritesControllerProvider.notifier).toggleAyah(ayah.surahNumber, ayah.numberInSurah),
                 icon: Icon(
                   isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-                  color: isFavorite ? _ayahAccent : SoftPalette.textSecondary,
+                  color: isFavorite ? _ayahAccent : secondaryText,
                   size: 26,
                 ),
               ),
@@ -313,21 +345,21 @@ class _PlayerContent extends ConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SpeedButton(speed: state.speed, onTap: onShowSpeedMenu),
+              _SpeedButton(speed: state.speed, onTap: onShowSpeedMenu, color: primaryText),
               IconButton(
                 onPressed: controller.previous,
-                icon: const Icon(Icons.skip_previous_rounded, size: 34, color: SoftPalette.textDark),
+                icon: Icon(Icons.skip_previous_rounded, size: 34, color: primaryText),
               ),
               _PlayPauseButton(isPlaying: state.isPlaying, isBuffering: state.isBuffering, onTap: controller.togglePlayPause),
               IconButton(
                 onPressed: controller.next,
-                icon: const Icon(Icons.skip_next_rounded, size: 34, color: SoftPalette.textDark),
+                icon: Icon(Icons.skip_next_rounded, size: 34, color: primaryText),
               ),
-              _LoopButton(loop: state.loop, onTap: onShowLoopMenu),
+              _LoopButton(loop: state.loop, onTap: onShowLoopMenu, color: primaryText),
             ],
           ),
         ),
@@ -340,11 +372,11 @@ class _PlayerContent extends ConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.volume_up_rounded, color: SoftPalette.textSecondary, size: 20),
+              Icon(Icons.volume_up_rounded, color: secondaryText, size: 20),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 onPressed: () {
@@ -355,13 +387,13 @@ class _PlayerContent extends ConsumerWidget {
                   };
                   ref.read(settingsControllerProvider.notifier).setDisplayMode(next);
                 },
-                icon: const Icon(Icons.translate_rounded, color: SoftPalette.textSecondary, size: 20),
+                icon: Icon(Icons.translate_rounded, color: secondaryText, size: 20),
               ),
               _AmbianceToggle(scene: AmbianceScene.rain),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 onPressed: () => AyahListSheet.show(context),
-                icon: const Icon(Icons.format_list_bulleted_rounded, color: SoftPalette.textSecondary, size: 20),
+                icon: Icon(Icons.format_list_bulleted_rounded, color: secondaryText, size: 20),
               ),
             ],
           ),
@@ -372,23 +404,32 @@ class _PlayerContent extends ConsumerWidget {
 }
 
 class _ReciterAvatar extends StatelessWidget {
-  const _ReciterAvatar();
+  const _ReciterAvatar({required this.onDark});
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 44,
       height: 44,
-      decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-      child: const Icon(FlutterIslamicIcons.muslim, color: SoftPalette.primary, size: 22),
+      decoration: BoxDecoration(
+        color: onDark ? Colors.white.withValues(alpha: 0.18) : SoftPalette.light,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        FlutterIslamicIcons.muslim,
+        color: onDark ? Colors.white : SoftPalette.primary,
+        size: 22,
+      ),
     );
   }
 }
 
 class _SpeedButton extends StatelessWidget {
-  const _SpeedButton({required this.speed, required this.onTap});
+  const _SpeedButton({required this.speed, required this.onTap, required this.color});
   final double speed;
   final VoidCallback onTap;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +440,7 @@ class _SpeedButton extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: Text(
           '${speed}x',
-          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: SoftPalette.textDark),
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: color),
         ),
       ),
     );
@@ -442,9 +483,10 @@ class _PlayPauseButton extends StatelessWidget {
 }
 
 class _LoopButton extends StatelessWidget {
-  const _LoopButton({required this.loop, required this.onTap});
+  const _LoopButton({required this.loop, required this.onTap, required this.color});
   final LoopSettings loop;
   final VoidCallback onTap;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -456,7 +498,7 @@ class _LoopButton extends StatelessWidget {
         child: Icon(
           Icons.repeat_one_rounded,
           size: 26,
-          color: loop.enabled ? SoftPalette.primary : SoftPalette.textDark,
+          color: loop.enabled ? SoftPalette.primary : color,
         ),
       ),
     );
@@ -478,7 +520,7 @@ class _AmbianceToggle extends ConsumerWidget {
       onPressed: () => ref.read(ambianceControllerProvider.notifier).toggle(scene),
       icon: Icon(
         Icons.water_drop_rounded,
-        color: active ? SoftPalette.primary : SoftPalette.textSecondary,
+        color: active ? Colors.white : SoftPalette.textDark,
         size: 20,
       ),
     );
