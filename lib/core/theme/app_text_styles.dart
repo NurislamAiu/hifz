@@ -55,11 +55,14 @@ abstract final class AppTextStyles {
     height: 1.9,
   );
 
+  static const String transliterationFontFamily = 'GentiumBookPlus';
+
   static const TextStyle transliteration = TextStyle(
-    fontSize: 15,
+    fontFamily: transliterationFontFamily,
+    fontSize: 16.5,
     fontWeight: FontWeight.w400,
-    fontStyle: FontStyle.italic,
     color: AppColors.textSecondary,
-    height: 1.5,
+    height: 1.6,
+    letterSpacing: 0.1,
   );
 }

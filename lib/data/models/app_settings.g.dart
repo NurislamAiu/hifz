@@ -31,13 +31,18 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       asrAdjustmentMinutes: fields[11] as int?,
       maghribAdjustmentMinutes: fields[12] as int?,
       ishaAdjustmentMinutes: fields[13] as int?,
+      fajrNotificationEnabled: fields[14] as bool?,
+      dhuhrNotificationEnabled: fields[15] as bool?,
+      asrNotificationEnabled: fields[16] as bool?,
+      maghribNotificationEnabled: fields[17] as bool?,
+      ishaNotificationEnabled: fields[18] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(19)
       ..writeByte(0)
       ..write(obj.reciterId)
       ..writeByte(1)
@@ -65,7 +70,17 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(12)
       ..write(obj.maghribAdjustmentMinutes)
       ..writeByte(13)
-      ..write(obj.ishaAdjustmentMinutes);
+      ..write(obj.ishaAdjustmentMinutes)
+      ..writeByte(14)
+      ..write(obj.fajrNotificationEnabled)
+      ..writeByte(15)
+      ..write(obj.dhuhrNotificationEnabled)
+      ..writeByte(16)
+      ..write(obj.asrNotificationEnabled)
+      ..writeByte(17)
+      ..write(obj.maghribNotificationEnabled)
+      ..writeByte(18)
+      ..write(obj.ishaNotificationEnabled);
   }
 
   @override

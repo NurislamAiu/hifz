@@ -399,7 +399,10 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
       await notificationRepo.scheduleHourlyRepentanceReminders();
       final prayerTimes = ref.read(prayerTimesProvider).valueOrNull;
       if (prayerTimes != null) {
-        await notificationRepo.scheduleTodayPrayerNotifications(prayerTimes);
+        await notificationRepo.scheduleTodayPrayerNotifications(
+          prayerTimes,
+          disabledKeys: ref.read(settingsControllerProvider).disabledPrayerKeys,
+        );
       }
     } else {
       await controller.setNotificationsEnabled(false);

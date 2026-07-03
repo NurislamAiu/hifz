@@ -618,7 +618,7 @@ class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
                       fit: BoxFit.scaleDown,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: maxWidth),
-                        child: _ayahText(ayahs[i]),
+                        child: _ayahText(ayahs[i], i == widget.state.currentIndex),
                       ),
                     ),
                   ),
@@ -631,7 +631,7 @@ class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
     );
   }
 
-  Widget _ayahText(Ayah ayah) {
+  Widget _ayahText(Ayah ayah, bool isCurrent) {
     final mode = widget.displayMode;
     return Column(
       mainAxisSize: MainAxisSize.min,

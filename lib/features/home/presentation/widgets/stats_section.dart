@@ -230,10 +230,27 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      _GoalStepper(
-                        icon: Iconsax.headphone,
-                        label: 'Слушать',
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
+                            child: const Icon(Iconsax.headphone, color: SoftPalette.primary, size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Слушать в день',
+                            style: AppTextStyles.body.copyWith(
+                              color: SoftPalette.textDark,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _GoalWheel(
                         minutes: listening,
                         onChanged: (value) => setSheetState(() => listening = value),
                       ),
@@ -364,53 +381,90 @@ class _TuneButton extends StatelessWidget {
   }
 }
 
-class _GoalStepper extends StatelessWidget {
-  const _GoalStepper({
-    required this.icon,
-    required this.label,
-    required this.minutes,
-    required this.onChanged,
-  });
+/// Carousel (wheel) minute picker — scroll to pick the daily goal instead of
+/// tapping +/-.
+class _GoalWheel extends StatefulWidget {
+  const _GoalWheel({required this.minutes, required this.onChanged});
 
-  final IconData icon;
-  final String label;
   final int minutes;
   final ValueChanged<int> onChanged;
 
   @override
+  State<_GoalWheel> createState() => _GoalWheelState();
+}
+
+class _GoalWheelState extends State<_GoalWheel> {
+  static const _min = 1;
+  static const _max = 180;
+
+  late final FixedExtentScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = FixedExtentScrollController(
+      initialItem: (widget.minutes - _min).clamp(0, _max - _min),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    void change(int delta) => onChanged((minutes + delta).clamp(1, 180));
+    const count = _max - _min + 1;
+    const itemExtent = 46.0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: SoftPalette.background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: SoftPalette.primary, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(label, style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
-          ),
-          IconButton(
-            onPressed: () => change(-5),
-            icon: const Icon(Iconsax.minus, color: SoftPalette.primary),
-          ),
-          SizedBox(
-            width: 64,
-            child: Text(
-              '$minutes мин',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: SoftPalette.textDark),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: SizedBox(
+        height: 180,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Fixed highlight band marking the selected row in the centre.
+            Container(
+              height: itemExtent,
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: SoftPalette.light,
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () => change(5),
-            icon: const Icon(Iconsax.add, color: SoftPalette.primary),
-          ),
-        ],
+            ListWheelScrollView.useDelegate(
+              controller: _controller,
+              itemExtent: itemExtent,
+              perspective: 0.006,
+              diameterRatio: 1.5,
+              physics: const FixedExtentScrollPhysics(),
+              onSelectedItemChanged: (i) => widget.onChanged(i + _min),
+              childDelegate: ListWheelChildBuilderDelegate(
+                childCount: count,
+                builder: (context, i) {
+                  final value = i + _min;
+                  final selected = value == widget.minutes;
+                  return Center(
+                    child: Text(
+                      '$value мин',
+                      style: AppTextStyles.title.copyWith(
+                        fontSize: selected ? 21 : 17,
+                        color: selected ? SoftPalette.primary : SoftPalette.textSecondary,
+                        fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

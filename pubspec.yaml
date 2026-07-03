@@ -83,11 +83,19 @@ flutter:
     - assets/ambiance/fire/
     - assets/ambiance/bird/
     - assets/ambiance/wind/
+    - assets/prayer_times/
 
   fonts:
     - family: NotoNaskhArabic
       fonts:
         - asset: assets/fonts/NotoNaskhArabic-Regular.ttf
+    - family: GentiumBookPlus
+      fonts:
+        - asset: assets/fonts/GentiumBookPlus-Regular.ttf
+        - asset: assets/fonts/GentiumBookPlus-Italic.ttf
+          style: italic
+        - asset: assets/fonts/GentiumBookPlus-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: true

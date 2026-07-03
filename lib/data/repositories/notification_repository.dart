@@ -134,8 +134,9 @@ class NotificationRepository {
   /// Replaces any previously scheduled prayer reminders with today's
   /// remaining ones.
   Future<void> scheduleTodayPrayerNotifications(
-    DailyPrayerTimes prayerTimes,
-  ) async {
+    DailyPrayerTimes prayerTimes, {
+    Set<String> disabledKeys = const {},
+  }) async {
     await _ensureInitialized();
     await cancelPrayerNotifications();
 
@@ -143,6 +144,7 @@ class NotificationRepository {
     var id = _prayerNotificationStartId;
     for (final entry in prayerTimes.entries) {
       if (entry.key == 'sunrise') continue;
+      if (disabledKeys.contains(entry.key)) continue;
       if (!entry.time.isAfter(now)) continue;
 
       await _plugin.zonedSchedule(

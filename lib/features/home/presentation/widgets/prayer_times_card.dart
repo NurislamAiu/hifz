@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/daily_prayer_times.dart';
-import '../../../../data/models/prayer_calculation_method.dart';
+import '../../../../data/providers.dart';
 import '../../providers/prayer_times_provider.dart';
 import '../../../settings/providers/settings_provider.dart';
 import '../../../../core/theme/soft_palette.dart';
@@ -115,7 +115,6 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           countdownLabel:
               '${prayerTimes.next.label} через ${_formatCountdown(prayerTimes.timeUntilNext)}',
           methodName: prayerTimes.methodName,
-          fromCache: prayerTimes.fromCache,
           child: Row(
             children: [
               for (final entry in prayerTimes.entries)
@@ -139,16 +138,25 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return 'Не удалось показать время намаза. Попробуйте ещё раз';
   }
 
+  Future<void> _rescheduleNotifications() async {
+    final settings = ref.read(settingsControllerProvider);
+    if (!(settings.notificationsEnabled ?? false)) return;
+    final prayerTimes = ref.read(prayerTimesProvider).valueOrNull;
+    if (prayerTimes == null) return;
+    await ref.read(notificationRepositoryProvider).scheduleTodayPrayerNotifications(
+          prayerTimes,
+          disabledKeys: settings.disabledPrayerKeys,
+        );
+  }
+
   Future<void> _showPrayerSettings(BuildContext context) async {
-    final initial = ref.read(settingsControllerProvider);
-    var method = initial.prayerMethod;
-    final adjustments = <String, int>{
-      'fajr': initial.prayerAdjustments.fajr,
-      'dhuhr': initial.prayerAdjustments.dhuhr,
-      'asr': initial.prayerAdjustments.asr,
-      'maghrib': initial.prayerAdjustments.maghrib,
-      'isha': initial.prayerAdjustments.isha,
-    };
+    const prayers = <(String, String)>[
+      ('fajr', 'Фаджр'),
+      ('dhuhr', 'Зухр'),
+      ('asr', 'Аср'),
+      ('maghrib', 'Магриб'),
+      ('isha', 'Иша'),
+    ];
 
     await showModalBottomSheet<void>(
       context: context,
@@ -158,130 +166,107 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.78,
-              minChildSize: 0.45,
-              maxChildSize: 0.92,
-              builder: (context, scrollController) {
-                return SafeArea(
-                  child: ListView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Настройки намаза',
-                              style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                            icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Метод расчёта',
-                        style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      for (final item in PrayerCalculationMethod.values)
-                        ListTile(
-                          onTap: () => setSheetState(() => method = item),
-                          title: Text(
-                            item.label,
-                            style: AppTextStyles.body.copyWith(color: SoftPalette.textDark),
-                          ),
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(
-                            method == item
-                                ? Iconsax.record_circle
-                                : Iconsax.record,
-                            color: method == item
-                                ? SoftPalette.primary
-                                : SoftPalette.textSecondary,
+        return SafeArea(
+          child: Consumer(
+            builder: (context, sheetRef, _) {
+              final settings = sheetRef.watch(settingsControllerProvider);
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Настройки намаза',
+                            style: AppTextStyles.title.copyWith(color: SoftPalette.textDark),
                           ),
                         ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Ручная корректировка',
-                        style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      _AdjustmentStepper(
-                        label: 'Фаджр',
-                        value: adjustments['fajr']!,
-                        onChanged: (value) =>
-                            setSheetState(() => adjustments['fajr'] = value),
-                      ),
-                      _AdjustmentStepper(
-                        label: 'Зухр',
-                        value: adjustments['dhuhr']!,
-                        onChanged: (value) =>
-                            setSheetState(() => adjustments['dhuhr'] = value),
-                      ),
-                      _AdjustmentStepper(
-                        label: 'Аср',
-                        value: adjustments['asr']!,
-                        onChanged: (value) =>
-                            setSheetState(() => adjustments['asr'] = value),
-                      ),
-                      _AdjustmentStepper(
-                        label: 'Магриб',
-                        value: adjustments['maghrib']!,
-                        onChanged: (value) =>
-                            setSheetState(() => adjustments['maghrib'] = value),
-                      ),
-                      _AdjustmentStepper(
-                        label: 'Иша',
-                        value: adjustments['isha']!,
-                        onChanged: (value) =>
-                            setSheetState(() => adjustments['isha'] = value),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: SoftPalette.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          onPressed: () async {
-                            final controller = ref.read(
-                              settingsControllerProvider.notifier,
-                            );
-                            await controller.setPrayerMethod(method);
-                            for (final entry in adjustments.entries) {
-                              await controller.setPrayerAdjustment(
-                                entry.key,
-                                entry.value,
-                              );
-                            }
-                            ref.invalidate(prayerTimesProvider);
-                            if (sheetContext.mounted) {
-                              Navigator.of(sheetContext).pop();
-                            }
-                          },
-                          child: const Text('Сохранить'),
+                        IconButton(
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Уведомления о намазе',
+                      style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Выключите намазы, о которых не нужно напоминать',
+                      style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final (key, label) in prayers)
+                      _PrayerNotifyRow(
+                        label: label,
+                        icon: _iconForKey(key),
+                        value: settings.isPrayerNotificationEnabled(key),
+                        onChanged: (value) async {
+                          await ref
+                              .read(settingsControllerProvider.notifier)
+                              .setPrayerNotificationEnabled(key, value);
+                          await _rescheduleNotifications();
+                        },
                       ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
+    );
+  }
+}
+
+class _PrayerNotifyRow extends StatelessWidget {
+  const _PrayerNotifyRow({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: SoftPalette.background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: value ? SoftPalette.primary : SoftPalette.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.body.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Switch(
+            activeTrackColor: Colors.white,
+            value: value,
+            activeThumbColor: SoftPalette.primary,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -297,7 +282,6 @@ class _PrayerCardShell extends StatelessWidget {
     this.dateLabel,
     this.countdownLabel,
     this.methodName,
-    this.fromCache = false,
   });
 
   final Widget child;
@@ -306,7 +290,6 @@ class _PrayerCardShell extends StatelessWidget {
   final String? dateLabel;
   final String? countdownLabel;
   final String? methodName;
-  final bool fromCache;
 
   @override
   Widget build(BuildContext context) {
@@ -411,27 +394,12 @@ class _PrayerCardShell extends StatelessWidget {
                   if (methodName != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              methodName!,
-                              style: AppTextStyles.caption.copyWith(
-                                color: Colors.white.withValues(alpha: 0.65),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                          if (fromCache)
-                            Text(
-                              'из кэша',
-                              style: AppTextStyles.caption.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                              ),
-                            ),
-                        ],
+                      child: Text(
+                        methodName!,
+                        style: AppTextStyles.caption.copyWith(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                 ],
@@ -532,54 +500,3 @@ class _PrayerTimesMessage extends StatelessWidget {
   }
 }
 
-class _AdjustmentStepper extends StatelessWidget {
-  const _AdjustmentStepper({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    void change(int delta) => onChanged((value + delta).clamp(-10, 10));
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: SoftPalette.background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
-          ),
-          IconButton(
-            onPressed: () => change(-1),
-            icon: const Icon(Iconsax.minus, color: SoftPalette.primary),
-          ),
-          SizedBox(
-            width: 58,
-            child: Text(
-              '${value >= 0 ? '+' : ''}$value мин',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.caption.copyWith(
-                color: SoftPalette.textDark,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () => change(1),
-            icon: const Icon(Iconsax.add, color: SoftPalette.primary),
-          ),
-        ],
-      ),
-    );
-  }
-}

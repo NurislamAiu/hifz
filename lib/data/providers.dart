@@ -5,6 +5,7 @@ import 'repositories/favorites_repository.dart';
 import 'repositories/listening_stats_repository.dart';
 import 'repositories/location_repository.dart';
 import 'repositories/notification_repository.dart';
+import 'repositories/official_prayer_times_repository.dart';
 import 'repositories/prayer_times_repository.dart';
 import 'repositories/progress_repository.dart';
 import 'repositories/quran_repository.dart';
@@ -31,6 +32,11 @@ final locationRepositoryProvider = Provider<LocationRepository>((ref) => Locatio
 
 final prayerTimesRepositoryProvider =
     Provider<PrayerTimesRepository>((ref) => PrayerTimesRepository());
+
+/// Official Kazakhstan (muftyat.kz) times bundled as an asset; tried first for
+/// the built-in KZ cities before falling back to the computed schedule.
+final officialPrayerTimesRepositoryProvider =
+    Provider<OfficialPrayerTimesRepository>((ref) => OfficialPrayerTimesRepository());
 
 final listeningStatsRepositoryProvider =
     Provider<ListeningStatsRepository>((ref) => ListeningStatsRepository());

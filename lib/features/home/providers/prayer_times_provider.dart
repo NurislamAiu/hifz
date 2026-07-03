@@ -23,6 +23,26 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
   }
 
   final selectedCity = PrayerCities.byId(settings.selectedCityId);
+
+  // Prefer the official Kazakhstan (muftyat.kz) times bundled for the built-in
+  // cities — they match the published schedule exactly (no 2–5 min drift).
+  if (selectedCity != null) {
+    final official = await ref.read(officialPrayerTimesRepositoryProvider).getSchedule(
+          city: selectedCity,
+          adjustments: settings.prayerAdjustments,
+        );
+    if (official != null) {
+      debugPrint('[PrayerTimes][Provider] using official muftyat data for ${selectedCity.name}');
+      if (notificationsEnabled) {
+        unawaited(notificationRepository.scheduleTodayPrayerNotifications(
+          official,
+          disabledKeys: settings.disabledPrayerKeys,
+        ));
+      }
+      return official;
+    }
+  }
+
   PrayerCity? effectiveCity = selectedCity;
   ({double lat, double lng})? coords;
 
@@ -70,7 +90,10 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
 
   if (notificationsEnabled) {
     unawaited(
-      notificationRepository.scheduleTodayPrayerNotifications(prayerTimes),
+      notificationRepository.scheduleTodayPrayerNotifications(
+        prayerTimes,
+        disabledKeys: settings.disabledPrayerKeys,
+      ),
     );
   }
 

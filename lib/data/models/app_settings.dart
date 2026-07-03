@@ -54,6 +54,37 @@ class AppSettings {
   @HiveField(13)
   final int? ishaAdjustmentMinutes;
 
+  // Per-prayer notification switches (null = enabled, for legacy installs).
+  @HiveField(14)
+  final bool? fajrNotificationEnabled;
+
+  @HiveField(15)
+  final bool? dhuhrNotificationEnabled;
+
+  @HiveField(16)
+  final bool? asrNotificationEnabled;
+
+  @HiveField(17)
+  final bool? maghribNotificationEnabled;
+
+  @HiveField(18)
+  final bool? ishaNotificationEnabled;
+
+  bool isPrayerNotificationEnabled(String key) => switch (key) {
+    'fajr' => fajrNotificationEnabled ?? true,
+    'dhuhr' => dhuhrNotificationEnabled ?? true,
+    'asr' => asrNotificationEnabled ?? true,
+    'maghrib' => maghribNotificationEnabled ?? true,
+    'isha' => ishaNotificationEnabled ?? true,
+    _ => true,
+  };
+
+  /// Prayer keys whose reminders the user has switched off.
+  Set<String> get disabledPrayerKeys => {
+    for (final key in const ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'])
+      if (!isPrayerNotificationEnabled(key)) key,
+  };
+
   int get listeningGoalMinutes =>
       dailyListeningGoalMinutes ?? defaultListeningGoalMinutes;
 
@@ -86,6 +117,11 @@ class AppSettings {
     this.asrAdjustmentMinutes,
     this.maghribAdjustmentMinutes,
     this.ishaAdjustmentMinutes,
+    this.fajrNotificationEnabled,
+    this.dhuhrNotificationEnabled,
+    this.asrNotificationEnabled,
+    this.maghribNotificationEnabled,
+    this.ishaNotificationEnabled,
   });
 
   AppSettings copyWith({
@@ -103,6 +139,11 @@ class AppSettings {
     int? asrAdjustmentMinutes,
     int? maghribAdjustmentMinutes,
     int? ishaAdjustmentMinutes,
+    bool? fajrNotificationEnabled,
+    bool? dhuhrNotificationEnabled,
+    bool? asrNotificationEnabled,
+    bool? maghribNotificationEnabled,
+    bool? ishaNotificationEnabled,
   }) => AppSettings(
     reciterId: reciterId ?? this.reciterId,
     displayMode: displayMode ?? this.displayMode,
@@ -125,6 +166,16 @@ class AppSettings {
     maghribAdjustmentMinutes:
         maghribAdjustmentMinutes ?? this.maghribAdjustmentMinutes,
     ishaAdjustmentMinutes: ishaAdjustmentMinutes ?? this.ishaAdjustmentMinutes,
+    fajrNotificationEnabled:
+        fajrNotificationEnabled ?? this.fajrNotificationEnabled,
+    dhuhrNotificationEnabled:
+        dhuhrNotificationEnabled ?? this.dhuhrNotificationEnabled,
+    asrNotificationEnabled:
+        asrNotificationEnabled ?? this.asrNotificationEnabled,
+    maghribNotificationEnabled:
+        maghribNotificationEnabled ?? this.maghribNotificationEnabled,
+    ishaNotificationEnabled:
+        ishaNotificationEnabled ?? this.ishaNotificationEnabled,
   );
 }
 

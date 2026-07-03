@@ -54,25 +54,30 @@ class PrayerTimesRepository {
       year: current.year,
     );
 
+    // Cache first: a month's timings are fixed, so once we have them for this
+    // location/method/month we serve them straight from Hive and never touch
+    // the network again — no more re-fetch (and reload flicker) on every launch.
     var fromCache = false;
-    List<Map<String, dynamic>> month;
-    try {
-      debugPrint('[PrayerTimes][Repo] fetching API cacheKey=$cacheKey');
-      month = await _apiClient.fetchMonthlyTimings(
-        latitude: lat,
-        longitude: lng,
-        method: method.apiId,
-        month: current.month,
-        year: current.year,
-      );
-      await _cacheRepository.saveRawMonth(key: cacheKey, days: month);
-      debugPrint('[PrayerTimes][Repo] API success days=${month.length}');
-    } catch (error, stackTrace) {
-      debugPrint('[PrayerTimes][Repo] API error=$error');
-      debugPrint('$stackTrace');
-      final cached = _cacheRepository.getRawMonth(cacheKey);
-      if (cached == null) {
-        debugPrint('[PrayerTimes][Repo] cache miss, using local fallback');
+    List<Map<String, dynamic>>? month = _cacheRepository.getRawMonth(cacheKey);
+    if (month != null) {
+      fromCache = true;
+      debugPrint('[PrayerTimes][Repo] cache hit days=${month.length}, skipping API');
+    } else {
+      try {
+        debugPrint('[PrayerTimes][Repo] cache miss, fetching API cacheKey=$cacheKey');
+        month = await _apiClient.fetchMonthlyTimings(
+          latitude: lat,
+          longitude: lng,
+          method: method.apiId,
+          month: current.month,
+          year: current.year,
+        );
+        await _cacheRepository.saveRawMonth(key: cacheKey, days: month);
+        debugPrint('[PrayerTimes][Repo] API success days=${month.length}');
+      } catch (error, stackTrace) {
+        debugPrint('[PrayerTimes][Repo] API error=$error');
+        debugPrint('$stackTrace');
+        debugPrint('[PrayerTimes][Repo] no cache, using local fallback');
         return _calculateLocally(
           lat: lat,
           lng: lng,
@@ -83,16 +88,14 @@ class PrayerTimesRepository {
           now: current,
         );
       }
-      fromCache = true;
-      month = cached;
-      debugPrint('[PrayerTimes][Repo] cache hit days=${month.length}');
     }
 
+    final days = month;
     final todayKey = _dateKey(current);
     debugPrint('[PrayerTimes][Repo] todayKey=$todayKey');
-    final rawToday = month.firstWhere(
+    final rawToday = days.firstWhere(
       (item) => _dateKeyFromAladhan(item) == todayKey,
-      orElse: () => month.first,
+      orElse: () => days.first,
     );
     final today = PrayerScheduleDay.fromAladhanJson(
       rawToday,
@@ -106,7 +109,7 @@ class PrayerTimesRepository {
     );
     final tomorrowKey = _dateKey(current.add(const Duration(days: 1)));
     final rawTomorrow = _firstWhereOrNull(
-      month,
+      days,
       (item) => _dateKeyFromAladhan(item) == tomorrowKey,
     );
     final tomorrow = rawTomorrow == null

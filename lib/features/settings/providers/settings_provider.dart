@@ -53,6 +53,17 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> setNotificationsEnabled(bool enabled) =>
       _persist(state.copyWith(notificationsEnabled: enabled));
+
+  Future<void> setPrayerNotificationEnabled(String key, bool enabled) {
+    return switch (key) {
+      'fajr' => _persist(state.copyWith(fajrNotificationEnabled: enabled)),
+      'dhuhr' => _persist(state.copyWith(dhuhrNotificationEnabled: enabled)),
+      'asr' => _persist(state.copyWith(asrNotificationEnabled: enabled)),
+      'maghrib' => _persist(state.copyWith(maghribNotificationEnabled: enabled)),
+      'isha' => _persist(state.copyWith(ishaNotificationEnabled: enabled)),
+      _ => Future.value(),
+    };
+  }
 }
 
 final settingsControllerProvider =

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/memorization_status.dart';
 import '../../../data/providers.dart';
+import '../../surahs/providers/surahs_provider.dart';
 
 class ProgressController extends Notifier<Map<String, MemorizationStatus>> {
   @override
@@ -55,8 +56,12 @@ final surahProgressPercentProvider = Provider.family<double, (int surahNumber, i
 /// Percentage memorized per juz (1..30), derived from cached ayah->juz mapping.
 final juzProgressProvider = Provider<Map<int, double>>((ref) {
   final statuses = ref.watch(progressControllerProvider);
+  // Depend on the Quran text being cached: this triggers the one-time download
+  // and, crucially, recomputes the juz breakdown once the ayahs are available
+  // (otherwise it would stay empty forever on first run).
+  final cached = ref.watch(surahsProvider).hasValue;
   final quranRepo = ref.watch(quranRepositoryProvider);
-  if (!quranRepo.isCached) return {};
+  if (!cached || !quranRepo.isCached) return {};
 
   final totalsByJuz = <int, int>{};
   final memorizedByJuz = <int, int>{};
