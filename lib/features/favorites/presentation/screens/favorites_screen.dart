@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -192,7 +193,7 @@ class _FavoriteTile extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.14), shape: BoxShape.circle),
               child: Icon(
-                isAyah ? Icons.bookmark_rounded : FlutterIslamicIcons.quran,
+                isAyah ? Iconsax.bookmark : FlutterIslamicIcons.quran,
                 color: badgeColor,
                 size: 18,
               ),
@@ -234,7 +235,7 @@ class _FavoriteTile extends StatelessWidget {
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: onRemove,
-              icon: const Icon(Icons.star_rounded, color: _ayahAccent, size: 22),
+              icon: const Icon(Iconsax.star1, color: _ayahAccent, size: 22),
             ),
           ],
         ),
@@ -303,7 +304,7 @@ class _EmptyFavorites extends StatelessWidget {
               height: 72,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-              child: const Icon(Icons.star_outline_rounded, color: SoftPalette.primary, size: 32),
+              child: const Icon(Iconsax.star, color: SoftPalette.primary, size: 32),
             ),
             const SizedBox(height: 16),
             Text(
@@ -353,7 +354,7 @@ class _RecentCard extends StatelessWidget {
               height: 30,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: SoftPalette.light, shape: BoxShape.circle),
-              child: const Icon(Icons.play_arrow_rounded, color: SoftPalette.primary, size: 18),
+              child: const Icon(Iconsax.play, color: SoftPalette.primary, size: 18),
             ),
             Text(
               title,

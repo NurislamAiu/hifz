@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,19 +54,19 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
   IconData _iconForKey(String key) {
     switch (key) {
       case 'fajr':
-        return Icons.wb_twilight_rounded;
+        return Iconsax.sun_fog;
       case 'sunrise':
-        return Icons.wb_sunny_outlined;
+        return Iconsax.sun_1;
       case 'dhuhr':
-        return Icons.wb_sunny_rounded;
+        return Iconsax.sun_1;
       case 'asr':
-        return Icons.filter_drama_rounded;
+        return Iconsax.cloud;
       case 'maghrib':
-        return Icons.nights_stay_rounded;
+        return Iconsax.moon;
       case 'isha':
-        return Icons.dark_mode_rounded;
+        return Iconsax.moon;
       default:
-        return Icons.access_time_rounded;
+        return Iconsax.clock;
     }
   }
 
@@ -84,7 +85,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
       ),
       error: (e, _) => _PrayerCardShell(
         child: _PrayerTimesMessage(
-          icon: Icons.wifi_off_rounded,
+          icon: Iconsax.cloud_cross,
           message: _logPrayerError(e),
           actionLabel: 'Повторить',
           onAction: () => ref.invalidate(prayerTimesProvider),
@@ -95,7 +96,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           debugPrint('[PrayerTimes][UI] data=null');
           return _PrayerCardShell(
             child: _PrayerTimesMessage(
-              icon: Icons.location_on_outlined,
+              icon: Iconsax.location,
               message: 'Разрешите доступ к геолокации, чтобы увидеть время намазов',
               actionLabel: 'Включить',
               onAction: () => ref.invalidate(prayerTimesProvider),
@@ -180,7 +181,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(sheetContext).pop(),
-                            icon: const Icon(Icons.close_rounded, color: SoftPalette.textSecondary),
+                            icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
                           ),
                         ],
                       ),
@@ -200,8 +201,8 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(
                             method == item
-                                ? Icons.radio_button_checked_rounded
-                                : Icons.radio_button_off_rounded,
+                                ? Iconsax.record_circle
+                                : Iconsax.record,
                             color: method == item
                                 ? SoftPalette.primary
                                 : SoftPalette.textSecondary,
@@ -397,7 +398,7 @@ class _PrayerCardShell extends StatelessWidget {
                         if (onTune != null)
                           IconButton(
                             onPressed: onTune,
-                            icon: const Icon(Icons.tune_rounded, size: 20),
+                            icon: const Icon(Iconsax.setting_4, size: 20),
                             color: Colors.white,
                             tooltip: 'Настройки намаза',
                           ),
@@ -560,7 +561,7 @@ class _AdjustmentStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => change(-1),
-            icon: const Icon(Icons.remove_rounded, color: SoftPalette.primary),
+            icon: const Icon(Iconsax.minus, color: SoftPalette.primary),
           ),
           SizedBox(
             width: 58,
@@ -575,7 +576,7 @@ class _AdjustmentStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => change(1),
-            icon: const Icon(Icons.add_rounded, color: SoftPalette.primary),
+            icon: const Icon(Iconsax.add, color: SoftPalette.primary),
           ),
         ],
       ),

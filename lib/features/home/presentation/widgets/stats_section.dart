@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
@@ -93,7 +94,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           children: [
             Expanded(
               child: _GoalPill(
-                icon: Icons.headphones_rounded,
+                icon: Iconsax.headphone,
                 label: 'Слушать',
                 value: '$listeningGoalMinutes мин',
               ),
@@ -225,13 +226,13 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(sheetContext).pop(),
-                            icon: const Icon(Icons.close_rounded, color: SoftPalette.textSecondary),
+                            icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       _GoalStepper(
-                        icon: Icons.headphones_rounded,
+                        icon: Iconsax.headphone,
                         label: 'Слушать',
                         minutes: listening,
                         onChanged: (value) => setSheetState(() => listening = value),
@@ -356,7 +357,7 @@ class _TuneButton extends StatelessWidget {
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: const Icon(Icons.tune_rounded, color: Colors.white),
+        icon: const Icon(Iconsax.setting_4, color: Colors.white),
         tooltip: 'Изменить цели',
       ),
     );
@@ -395,7 +396,7 @@ class _GoalStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => change(-5),
-            icon: const Icon(Icons.remove_rounded, color: SoftPalette.primary),
+            icon: const Icon(Iconsax.minus, color: SoftPalette.primary),
           ),
           SizedBox(
             width: 64,
@@ -407,7 +408,7 @@ class _GoalStepper extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => change(5),
-            icon: const Icon(Icons.add_rounded, color: SoftPalette.primary),
+            icon: const Icon(Iconsax.add, color: SoftPalette.primary),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
@@ -116,7 +117,7 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(sheetContext).pop(),
-                        icon: const Icon(Icons.close_rounded, color: SoftPalette.textSecondary),
+                        icon: const Icon(Iconsax.close_circle, color: SoftPalette.textSecondary),
                       ),
                     ],
                   ),
@@ -168,7 +169,7 @@ class _CityButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.location_on_rounded, color: SoftPalette.primary, size: 16),
+            const Icon(Iconsax.location, color: SoftPalette.primary, size: 16),
             const SizedBox(width: 6),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 92),
@@ -182,7 +183,7 @@ class _CityButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.expand_more_rounded, color: SoftPalette.textSecondary, size: 18),
+            const Icon(Iconsax.arrow_down_1, color: SoftPalette.textSecondary, size: 18),
           ],
         ),
       ),
@@ -209,12 +210,12 @@ class _CityTile extends StatelessWidget {
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
       leading: Icon(
-        selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+        selected ? Iconsax.record_circle : Iconsax.record,
         color: selected ? SoftPalette.primary : SoftPalette.textSecondary,
       ),
       title: Text(title, style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
       subtitle: Text(subtitle, style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary)),
-      trailing: selected ? const Icon(Icons.check_rounded, color: SoftPalette.primary) : null,
+      trailing: selected ? const Icon(Iconsax.tick_circle, color: SoftPalette.primary) : null,
     );
   }
 }

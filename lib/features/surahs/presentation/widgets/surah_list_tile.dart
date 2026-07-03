@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
@@ -144,7 +145,7 @@ class _NumberSeal extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: SoftPalette.surface, width: 1.5),
                 ),
-                child: const Icon(Icons.check_rounded, size: 10, color: Colors.white),
+                child: const Icon(Iconsax.tick_circle, size: 10, color: Colors.white),
               ),
             ),
         ],

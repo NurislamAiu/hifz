@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -69,7 +70,7 @@ class ProgressScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: _StatChip(
-                icon: Icons.local_fire_department_rounded,
+                icon: Iconsax.candle,
                 value: '$streak дн',
                 label: 'Стрик',
               ),
@@ -77,7 +78,7 @@ class ProgressScreen extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _StatChip(
-                icon: Icons.emoji_events_rounded,
+                icon: Iconsax.cup,
                 value: '$record дн',
                 label: 'Рекорд',
               ),
@@ -258,7 +259,7 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
-          prefixIcon: const Icon(Icons.search, color: SoftPalette.primary, size: 20),
+          prefixIcon: const Icon(Iconsax.search_normal_1, color: SoftPalette.primary, size: 20),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
@@ -308,7 +309,7 @@ class _BackButton extends StatelessWidget {
           boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 4, blur: 10),
         ),
         child: const Icon(
-          Icons.arrow_back_ios_new_rounded,
+          Iconsax.arrow_left_2,
           size: 16,
           color: SoftPalette.primary,
         ),
@@ -617,7 +618,7 @@ class _ProgressRow extends StatelessWidget {
               ),
               if (done)
                 const Icon(
-                  Icons.check_circle_rounded,
+                  Iconsax.tick_circle,
                   color: SoftPalette.primary,
                   size: 20,
                 )

@@ -31,6 +31,7 @@ class PlayerViewState {
   final double speed;
   final LoopSettings loop;
   final int repeatsRemaining;
+  final double volume;
 
   const PlayerViewState({
     required this.surahNumber,
@@ -45,6 +46,7 @@ class PlayerViewState {
     required this.speed,
     required this.loop,
     required this.repeatsRemaining,
+    this.volume = 1.0,
   });
 
   Ayah get currentAyah => ayahs[currentIndex];
@@ -60,6 +62,7 @@ class PlayerViewState {
     double? speed,
     LoopSettings? loop,
     int? repeatsRemaining,
+    double? volume,
   }) {
     return PlayerViewState(
       surahNumber: surahNumber,
@@ -74,6 +77,7 @@ class PlayerViewState {
       speed: speed ?? this.speed,
       loop: loop ?? this.loop,
       repeatsRemaining: repeatsRemaining ?? this.repeatsRemaining,
+      volume: volume ?? this.volume,
     );
   }
 }
@@ -255,6 +259,13 @@ class PlayerController extends Notifier<PlayerViewState?> {
   }
 
   Future<void> seek(Duration position) => _player.seek(position);
+
+  Future<void> setVolume(double volume) async {
+    final s = state;
+    if (s == null) return;
+    state = s.copyWith(volume: volume);
+    await _player.setVolume(volume);
+  }
 
   Future<void> setSpeed(double speed) async {
     final s = state;

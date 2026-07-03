@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -184,9 +185,9 @@ class _ReciterTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (isSelected)
-              const Icon(Icons.check_circle_rounded, color: SoftPalette.primary, size: 22)
+              const Icon(Iconsax.tick_circle, color: SoftPalette.primary, size: 22)
             else
-              const Icon(Icons.chevron_right_rounded, color: SoftPalette.textSecondary),
+              const Icon(Iconsax.arrow_right_3, color: SoftPalette.textSecondary),
           ],
         ),
       ),
@@ -213,7 +214,7 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Поиск чтеца',
           hintStyle: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
-          prefixIcon: const Icon(Icons.search, color: SoftPalette.primary, size: 20),
+          prefixIcon: const Icon(Iconsax.search_normal_1, color: SoftPalette.primary, size: 20),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),

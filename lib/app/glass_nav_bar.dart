@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 
@@ -12,11 +13,11 @@ class GlassNavBar extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _items = [
-    (icon: Icons.home_rounded, label: 'Главная'),
-    (icon: Icons.bar_chart_rounded, label: 'Статистика'),
+    (icon: Iconsax.home_2, label: 'Главная'),
+    (icon: Iconsax.chart_2, label: 'Статистика'),
     (icon: FlutterIslamicIcons.quran, label: 'Чтецы'),
-    (icon: Icons.star_rounded, label: 'Избранное'),
-    (icon: Icons.settings_rounded, label: 'Настройки'),
+    (icon: Iconsax.star, label: 'Избранное'),
+    (icon: Iconsax.setting_2, label: 'Настройки'),
   ];
 
   @override

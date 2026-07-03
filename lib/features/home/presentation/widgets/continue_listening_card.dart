@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -76,7 +77,7 @@ class ContinueListeningCard extends ConsumerWidget {
                 shape: BoxShape.circle,
                 boxShadow: SoftPalette.softShadow(opacity: 0.16),
               ),
-              child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
+              child: const Icon(Iconsax.play, color: Colors.white, size: 26),
             ),
           ),
         ],

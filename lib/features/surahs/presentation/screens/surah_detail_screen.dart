@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
@@ -50,7 +51,7 @@ class SurahDetailScreen extends ConsumerWidget {
                         boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 4, blur: 10),
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                        Iconsax.arrow_left_2,
                         size: 16,
                         color: SoftPalette.primary,
                       ),
@@ -84,7 +85,7 @@ class SurahDetailScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                         boxShadow: SoftPalette.softShadow(opacity: 0.16, y: 6, blur: 14),
                       ),
-                      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
+                      child: const Icon(Iconsax.play, color: Colors.white, size: 26),
                     ),
                   ),
                 ],
@@ -169,7 +170,7 @@ class _AyahTile extends ConsumerWidget {
               onPressed: () =>
                   ref.read(favoritesControllerProvider.notifier).toggleAyah(ayah.surahNumber, ayah.numberInSurah),
               icon: Icon(
-                isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+                isFavorite ? Iconsax.star1 : Iconsax.star,
                 color: isFavorite ? const Color(0xFFE0A83F) : SoftPalette.textSecondary,
                 size: 20,
               ),

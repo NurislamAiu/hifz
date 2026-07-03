@@ -1,12 +1,14 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/soft_palette.dart';
+import '../../../../data/models/ayah.dart';
 import '../../../../data/models/display_mode.dart';
 import '../../../../data/models/favorite_item.dart';
 import '../../../favorites/providers/favorites_provider.dart';
@@ -60,73 +62,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }
   }
 
-  void _showLoopMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: SoftPalette.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (sheetContext) {
-        final controller = ref.read(playerControllerProvider.notifier);
-        Widget option(String label, LoopSettings loop) => ListTile(
-              title: Text(label, style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
-              onTap: () {
-                controller.setLoop(loop);
-                Navigator.of(sheetContext).pop();
-              },
-            );
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Text('Зациклить аят', style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary)),
-              const SizedBox(height: 4),
-              option('Выключено', LoopSettings.off),
-              option('Повторить 3 раза', const LoopSettings(enabled: true, repeatCount: 3)),
-              option('Повторить 5 раз', const LoopSettings(enabled: true, repeatCount: 5)),
-              option('Повторить 10 раз', const LoopSettings(enabled: true, repeatCount: 10)),
-              option('Бесконечно', const LoopSettings(enabled: true, infinite: true)),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  } 
-
-  void _showSpeedMenu(BuildContext context) {
-    final controller = ref.read(playerControllerProvider.notifier);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: SoftPalette.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (sheetContext) {
-        const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                'Скорость воспроизведения',
-                style: AppTextStyles.overline.copyWith(color: SoftPalette.textSecondary),
-              ),
-              for (final s in speeds)
-                ListTile(
-                  title: Text('${s}x', style: AppTextStyles.body.copyWith(color: SoftPalette.textDark)),
-                  onTap: () {
-                    controller.setSpeed(s);
-                    Navigator.of(sheetContext).pop();
-                  },
-                ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerControllerProvider);
@@ -150,24 +85,24 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (ambianceScene != null && ambianceVideo != null)
-                ValueListenableBuilder<VideoPlayerValue>(
-                  valueListenable: ambianceVideo,
-                  builder: (context, video, _) {
-                    if (!video.isInitialized || video.size.width <= 0 || video.size.height <= 0) {
-                      return const SizedBox.shrink();
-                    }
-                    return FittedBox(
-                      fit: BoxFit.cover,
-                      clipBehavior: Clip.hardEdge,
-                      child: SizedBox(
-                        width: video.size.width,
-                        height: video.size.height,
-                        child: VideoPlayer(ambianceVideo),
-                      ),
-                    );
-                  },
+              Positioned.fill(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 550),
+                  // Force every (incoming/outgoing) child to fill the sheet, so
+                  // the video covers the whole background instead of shrinking
+                  // to its intrinsic size.
+                  layoutBuilder: (currentChild, previousChildren) => Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ...previousChildren,
+                      ?currentChild,
+                    ],
+                  ),
+                  child: (ambianceScene != null && ambianceVideo != null)
+                      ? _AmbianceVideo(key: ValueKey(ambianceScene), controller: ambianceVideo)
+                      : const SizedBox.shrink(key: ValueKey('no-ambiance')),
                 ),
+              ),
               if (ambianceScene != null && showScrim)
                 Positioned.fill(
                   child: BackdropFilter(
@@ -192,11 +127,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 bottom: false,
                 child: playerState == null
                     ? const Center(child: CircularProgressIndicator(color: SoftPalette.primary))
-                    : _PlayerContent(
-                        state: playerState,
-                        onShowLoopMenu: () => _showLoopMenu(context),
-                        onShowSpeedMenu: () => _showSpeedMenu(context),
-                      ),
+                    : _PlayerContent(state: playerState),
               ),
             ],
           ),
@@ -207,11 +138,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 }
 
 class _PlayerContent extends ConsumerWidget {
-  const _PlayerContent({required this.state, required this.onShowLoopMenu, required this.onShowSpeedMenu});
+  const _PlayerContent({required this.state});
 
   final PlayerViewState state;
-  final VoidCallback onShowLoopMenu;
-  final VoidCallback onShowSpeedMenu;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -254,7 +183,7 @@ class _PlayerContent extends ConsumerWidget {
                   children: [
                     Text(
                       state.surahNameTransliteration,
-                      style: AppTextStyles.displayTitle.copyWith(color: primaryText),
+                      style: AppTextStyles.displayTitle.copyWith(color: primaryText, fontSize: 28),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -286,30 +215,16 @@ class _PlayerContent extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              children: [
-                if (displayMode == DisplayMode.arabic || displayMode == DisplayMode.both)
-                  Text(
-                    '${ayah.textArabic} ﴿${ayah.numberInSurah}﴾',
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    style: AppTextStyles.arabic.copyWith(color: primaryText),
-                  ),
-                if (displayMode == DisplayMode.both) const SizedBox(height: 12),
-                if ((displayMode == DisplayMode.transliteration || displayMode == DisplayMode.both) &&
-                    ayah.textTransliteration != null)
-                  Text(
-                    ayah.textTransliteration!,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.transliteration.copyWith(color: secondaryText),
-                  ),
-              ],
-            ),
-          ),
+          child: displayMode == DisplayMode.none
+              ? const SizedBox.shrink()
+              : _AyahCarousel(
+                  state: state,
+                  displayMode: displayMode,
+                  primaryText: primaryText,
+                  secondaryText: secondaryText,
+                ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
@@ -341,7 +256,7 @@ class _PlayerContent extends ConsumerWidget {
               IconButton(
                 onPressed: () => ref.read(favoritesControllerProvider.notifier).toggleAyah(ayah.surahNumber, ayah.numberInSurah),
                 icon: Icon(
-                  isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+                  isFavorite ? Iconsax.star1 : Iconsax.star,
                   color: isFavorite ? _ayahAccent : secondaryText,
                   size: 26,
                 ),
@@ -354,17 +269,29 @@ class _PlayerContent extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SpeedButton(speed: state.speed, onTap: onShowSpeedMenu, color: primaryText),
+              Builder(
+                builder: (btnContext) => _SpeedButton(
+                  speed: state.speed,
+                  onTap: () => _showSpeedMenu(btnContext, ref, state.speed),
+                  color: primaryText,
+                ),
+              ),
               IconButton(
                 onPressed: controller.previous,
-                icon: Icon(Icons.skip_previous_rounded, size: 34, color: primaryText),
+                icon: Icon(Iconsax.previous, size: 34, color: primaryText),
               ),
               _PlayPauseButton(isPlaying: state.isPlaying, isBuffering: state.isBuffering, onTap: controller.togglePlayPause),
               IconButton(
                 onPressed: controller.next,
-                icon: Icon(Icons.skip_next_rounded, size: 34, color: primaryText),
+                icon: Icon(Iconsax.next, size: 34, color: primaryText),
               ),
-              _LoopButton(loop: state.loop, onTap: onShowLoopMenu, color: primaryText),
+              Builder(
+                builder: (btnContext) => _LoopButton(
+                  loop: state.loop,
+                  onTap: () => _showLoopMenu(btnContext, ref, state.loop),
+                  color: primaryText,
+                ),
+              ),
             ],
           ),
         ),
@@ -381,19 +308,25 @@ class _PlayerContent extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.volume_up_rounded, color: secondaryText, size: 20),
+              Builder(
+                builder: (btnContext) => IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _showSoundMenu(btnContext, ref),
+                  icon: Icon(Iconsax.volume_high, color: secondaryText, size: 20),
+                ),
+              ),
               Builder(
                 builder: (btnContext) => IconButton(
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _showDisplayModeMenu(btnContext, ref, displayMode),
-                  icon: Icon(Icons.translate_rounded, color: secondaryText, size: 20),
+                  icon: Icon(Iconsax.translate, color: secondaryText, size: 20),
                 ),
               ),
-              _AmbianceToggle(scene: AmbianceScene.rain),
+              const _AmbianceToggle(),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 onPressed: () => AyahListSheet.show(context),
-                icon: Icon(Icons.format_list_bulleted_rounded, color: secondaryText, size: 20),
+                icon: Icon(Iconsax.menu_1, color: secondaryText, size: 20),
               ),
             ],
           ),
@@ -425,7 +358,7 @@ Future<void> _showDisplayModeMenu(BuildContext context, WidgetRef ref, DisplayMo
             SizedBox(
               width: 24,
               child: current == mode
-                  ? const Icon(Icons.check_rounded, size: 18, color: SoftPalette.primary)
+                  ? const Icon(Iconsax.tick_circle, size: 18, color: SoftPalette.primary)
                   : null,
             ),
             Text(
@@ -442,7 +375,7 @@ Future<void> _showDisplayModeMenu(BuildContext context, WidgetRef ref, DisplayMo
   final selected = await showMenu<DisplayMode>(
     context: context,
     position: position,
-    color: SoftPalette.surface,
+    color: SoftPalette.surface.withValues(alpha: 0.82),
     elevation: 8,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     items: [
@@ -455,6 +388,270 @@ Future<void> _showDisplayModeMenu(BuildContext context, WidgetRef ref, DisplayMo
 
   if (selected != null) {
     ref.read(settingsControllerProvider.notifier).setDisplayMode(selected);
+  }
+}
+
+/// Small popover above the speed button for picking the playback speed.
+Future<void> _showSpeedMenu(BuildContext context, WidgetRef ref, double current) async {
+  final button = context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  final selected = await showMenu<double>(
+    context: context,
+    position: position,
+    color: SoftPalette.surface.withValues(alpha: 0.82),
+    elevation: 8,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    items: [
+      PopupMenuItem<double>(
+        enabled: false,
+        padding: EdgeInsets.zero,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final s in speeds)
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.of(context).pop(s),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Text(
+                    '${s}x',
+                    style: AppTextStyles.body.copyWith(
+                      color: current == s ? SoftPalette.primary : SoftPalette.textDark,
+                      fontWeight: current == s ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 11
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ],
+  );
+
+  if (selected != null) {
+    ref.read(playerControllerProvider.notifier).setSpeed(selected);
+  }
+}
+
+/// Small popover above the loop button for picking the ayah repeat mode.
+Future<void> _showLoopMenu(BuildContext context, WidgetRef ref, LoopSettings current) async {
+  final button = context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  bool matches(LoopSettings loop) =>
+      current.enabled == loop.enabled &&
+      current.infinite == loop.infinite &&
+      (loop.infinite || !loop.enabled || current.repeatCount == loop.repeatCount);
+
+  PopupMenuItem<LoopSettings> item(LoopSettings loop, String label) => PopupMenuItem<LoopSettings>(
+        value: loop,
+        height: 44,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              child: matches(loop)
+                  ? const Icon(Iconsax.tick_circle, size: 18, color: SoftPalette.primary)
+                  : null,
+            ),
+            Text(
+              label,
+              style: AppTextStyles.body.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: matches(loop) ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  final selected = await showMenu<LoopSettings>(
+    context: context,
+    position: position,
+    color: SoftPalette.surface.withValues(alpha: 0.82),
+    elevation: 8,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    items: [
+      item(LoopSettings.off, 'Выключено'),
+      item(const LoopSettings(enabled: true, repeatCount: 3), 'Повторить 3 раза'),
+      item(const LoopSettings(enabled: true, repeatCount: 5), 'Повторить 5 раз'),
+      item(const LoopSettings(enabled: true, repeatCount: 10), 'Повторить 10 раз'),
+      item(const LoopSettings(enabled: true, infinite: true), 'Бесконечно'),
+    ],
+  );
+
+  if (selected != null) {
+    ref.read(playerControllerProvider.notifier).setLoop(selected);
+  }
+}
+
+/// Renders a single ambient video controller, scaled to cover. Kept as its own
+/// keyed widget so [AnimatedSwitcher] can crossfade between scenes.
+class _AmbianceVideo extends StatelessWidget {
+  const _AmbianceVideo({super.key, required this.controller});
+
+  final VideoPlayerController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, video, _) {
+        if (!video.isInitialized || video.size.width <= 0 || video.size.height <= 0) {
+          return const SizedBox.shrink();
+        }
+        return FittedBox(
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox(
+            width: video.size.width,
+            height: video.size.height,
+            child: VideoPlayer(controller),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Vertical carousel of every ayah in the surah: the centered (current) ayah
+/// is large and bright, the ones above/below shrink and fade the further they
+/// are from the centre. Stays in sync with playback and lets the user flick
+/// to another ayah to jump there.
+class _AyahCarousel extends ConsumerStatefulWidget {
+  const _AyahCarousel({
+    required this.state,
+    required this.displayMode,
+    required this.primaryText,
+    required this.secondaryText,
+  });
+
+  final PlayerViewState state;
+  final DisplayMode displayMode;
+  final Color primaryText;
+  final Color secondaryText;
+
+  @override
+  ConsumerState<_AyahCarousel> createState() => _AyahCarouselState();
+}
+
+class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
+  late final PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: 0.6, initialPage: widget.state.currentIndex);
+  }
+
+  @override
+  void didUpdateWidget(covariant _AyahCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Follow playback: animate to the ayah that just became current.
+    if (oldWidget.state.currentIndex != widget.state.currentIndex && _controller.hasClients) {
+      _controller.animateToPage(
+        widget.state.currentIndex,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ayahs = widget.state.ayahs;
+    final maxWidth = MediaQuery.of(context).size.width - 56;
+
+    return PageView.builder(
+      controller: _controller,
+      scrollDirection: Axis.vertical,
+      itemCount: ayahs.length,
+      onPageChanged: (i) {
+        // Only react to user-driven changes (a programmatic follow lands exactly
+        // on the current index, so this is a no-op then).
+        if (i != widget.state.currentIndex) {
+          ref.read(playerControllerProvider.notifier).jumpToAyah(ayahs[i].numberInSurah);
+        }
+      },
+      itemBuilder: (context, i) {
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final page = _controller.hasClients && _controller.position.haveDimensions
+                ? (_controller.page ?? widget.state.currentIndex.toDouble())
+                : widget.state.currentIndex.toDouble();
+            final diff = (i - page).abs();
+            final scale = (1.0 - diff * 0.26).clamp(0.55, 1.0);
+            final opacity = (1.0 - diff * 0.5).clamp(0.2, 1.0);
+            return Center(
+              child: Opacity(
+                opacity: opacity,
+                child: Transform.scale(
+                  scale: scale,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxWidth),
+                        child: _ayahText(ayahs[i]),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _ayahText(Ayah ayah) {
+    final mode = widget.displayMode;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (mode == DisplayMode.arabic || mode == DisplayMode.both)
+          Text(
+            '${ayah.textArabic} ﴿${ayah.numberInSurah}﴾',
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            style: AppTextStyles.arabic.copyWith(color: widget.primaryText),
+          ),
+        if (mode == DisplayMode.both) const SizedBox(height: 10),
+        if ((mode == DisplayMode.transliteration || mode == DisplayMode.both) && ayah.textTransliteration != null)
+          Text(
+            ayah.textTransliteration!,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.transliteration.copyWith(color: widget.secondaryText),
+          ),
+      ],
+    );
   }
 }
 
@@ -528,7 +725,7 @@ class _PlayPauseButton extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
               )
             : Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                isPlaying ? Iconsax.pause : Iconsax.play,
                 size: 38,
                 color: Colors.white,
               ),
@@ -551,7 +748,7 @@ class _LoopButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Icon(
-          Icons.repeat_one_rounded,
+          Iconsax.repeate_one,
           size: 26,
           color: loop.enabled ? SoftPalette.primary : color,
         ),
@@ -560,23 +757,181 @@ class _LoopButton extends StatelessWidget {
   }
 }
 
-/// Toggles a looping ambient background (silent video + ambient sound track,
-/// mixed alongside the Quran recitation) on and off.
+/// Opens the scene picker to switch the silent looping background video
+/// between the available ambiences (or turn it off).
 class _AmbianceToggle extends ConsumerWidget {
-  const _AmbianceToggle({required this.scene});
-  final AmbianceScene scene;
+  const _AmbianceToggle();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final active = ref.watch(ambianceControllerProvider) == scene;
-    return IconButton(
-      visualDensity: VisualDensity.compact,
-      tooltip: scene.label,
-      onPressed: () => ref.read(ambianceControllerProvider.notifier).toggle(scene),
-      icon: Icon(
-        Icons.water_drop_rounded,
-        color: active ? Colors.white : SoftPalette.textDark,
-        size: 20,
+    final active = ref.watch(ambianceControllerProvider);
+    return Builder(
+      builder: (btnContext) => IconButton(
+        visualDensity: VisualDensity.compact,
+        tooltip: 'Фон',
+        onPressed: () => _showAmbianceMenu(btnContext, ref, active),
+        icon: Icon(
+          active?.icon ?? Iconsax.gallery,
+          color: active != null ? Colors.white : SoftPalette.textDark,
+          size: 20,
+        ),
+      ),
+    );
+  }
+}
+
+/// Small popover above the background button for picking the ambient scene.
+Future<void> _showAmbianceMenu(BuildContext context, WidgetRef ref, AmbianceScene? current) async {
+  final button = context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  final notifier = ref.read(ambianceControllerProvider.notifier);
+
+  PopupMenuItem<void> row(IconData icon, String label, bool selected, VoidCallback onTap) => PopupMenuItem<void>(
+        height: 44,
+        onTap: onTap,
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: selected ? SoftPalette.primary : SoftPalette.textDark),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: AppTextStyles.body.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  await showMenu<void>(
+    context: context,
+    position: position,
+    color: SoftPalette.surface.withValues(alpha: 0.82),
+    elevation: 8,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    items: [
+      for (final scene in AmbianceScene.values)
+        row(scene.icon, scene.label, current == scene, () => notifier.select(scene)),
+      row(Iconsax.video_slash, 'Выключить', current == null, notifier.stop),
+    ],
+  );
+}
+
+/// Popover above the sound button with two volume sliders: one for the Quran
+/// recitation, one for the ambient noise track.
+Future<void> _showSoundMenu(BuildContext context, WidgetRef ref) async {
+  final button = context.findRenderObject() as RenderBox;
+  final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  await showMenu<void>(
+    context: context,
+    position: position,
+    color: SoftPalette.surface.withValues(alpha: 0.82),
+    elevation: 8,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    items: const [
+      PopupMenuItem<void>(
+        enabled: false,
+        padding: EdgeInsets.zero,
+        child: _SoundControls(),
+      ),
+    ],
+  );
+}
+
+/// The two volume rows inside the sound popover. Keeps local slider values so
+/// dragging stays smooth regardless of the surrounding popup route rebuilds.
+class _SoundControls extends ConsumerStatefulWidget {
+  const _SoundControls();
+
+  @override
+  ConsumerState<_SoundControls> createState() => _SoundControlsState();
+}
+
+class _SoundControlsState extends ConsumerState<_SoundControls> {
+  late double _quran;
+  late double _noise;
+
+  @override
+  void initState() {
+    super.initState();
+    _quran = ref.read(playerControllerProvider)?.volume ?? 1.0;
+    _noise = ref.read(ambianceNoiseVolumeProvider);
+  }
+
+  Widget _slider(IconData icon, String label, double value, ValueChanged<double> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: SoftPalette.primary),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: SoftPalette.textDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${(value * 100).round()}%',
+              style: AppTextStyles.caption.copyWith(color: SoftPalette.textSecondary),
+            ),
+          ],
+        ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 3,
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            activeTrackColor: SoftPalette.primary,
+            inactiveTrackColor: SoftPalette.track,
+            thumbColor: SoftPalette.primary,
+          ),
+          child: Slider(value: value, onChanged: onChanged),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 240,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _slider(Iconsax.microphone_2, 'Коран', _quran, (v) {
+              setState(() => _quran = v);
+              ref.read(playerControllerProvider.notifier).setVolume(v);
+            }),
+            _slider(Iconsax.wind, 'Фоновый шум', _noise, (v) {
+              setState(() => _noise = v);
+              ref.read(ambianceNoiseVolumeProvider.notifier).state = v;
+            }),
+          ],
+        ),
       ),
     );
   }

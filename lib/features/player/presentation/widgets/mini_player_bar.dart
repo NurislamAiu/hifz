@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,7 +98,7 @@ class _MiniPlayerContent extends ConsumerWidget {
                     boxShadow: SoftPalette.softShadow(opacity: 0.16, y: 4, blur: 10),
                   ),
                   child: Icon(
-                    state.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    state.isPlaying ? Iconsax.pause : Iconsax.play,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -106,7 +107,7 @@ class _MiniPlayerContent extends ConsumerWidget {
               IconButton(
                 onPressed: controller.next,
                 icon: const Icon(
-                  Icons.skip_next_rounded,
+                  Iconsax.next,
                   color: SoftPalette.textSecondary,
                   size: 26,
                 ),

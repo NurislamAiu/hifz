@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
@@ -11,7 +12,7 @@ class AyahListSheet extends ConsumerWidget {
   static void show(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: SoftPalette.surface,
+      backgroundColor: SoftPalette.surface.withValues(alpha: 0.9),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -88,7 +89,7 @@ class AyahListSheet extends ConsumerWidget {
                       ),
                     ),
                     trailing: isCurrent
-                        ? const Icon(Icons.equalizer_rounded, color: SoftPalette.primary, size: 18)
+                        ? const Icon(Iconsax.chart, color: SoftPalette.primary, size: 18)
                         : null,
                   );
                 },

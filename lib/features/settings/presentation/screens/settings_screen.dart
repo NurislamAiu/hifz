@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -87,7 +88,7 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Сделать садака',
                   subtitle: 'Поддержать труд команды — по желанию',
                   trailing: const Icon(
-                    Icons.chevron_right_rounded,
+                    Iconsax.arrow_right_3,
                     color: AppColors.textTertiary,
                   ),
                   onTap: () => _openOrNotify(
@@ -99,11 +100,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 60, endIndent: 16),
                 _SettingsRow(
-                  icon: Icons.ios_share_rounded,
+                  icon: Iconsax.export,
                   iconColor: AppColors.accent,
                   title: 'Поделиться приложением',
                   trailing: const Icon(
-                    Icons.chevron_right_rounded,
+                    Iconsax.arrow_right_3,
                     color: AppColors.textTertiary,
                   ),
                   onTap: () => SharePlus.instance.share(
@@ -116,11 +117,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 60, endIndent: 16),
                 _SettingsRow(
-                  icon: Icons.star_rounded,
+                  icon: Iconsax.star1,
                   iconColor: AppColors.success,
                   title: 'Оценить приложение',
                   trailing: const Icon(
-                    Icons.chevron_right_rounded,
+                    Iconsax.arrow_right_3,
                     color: AppColors.textTertiary,
                   ),
                   onTap: () => _openOrNotify(
@@ -142,7 +143,7 @@ class SettingsScreen extends ConsumerWidget {
                 _VersionRow(),
                 Divider(height: 1, indent: 60, endIndent: 16),
                 _SettingsRow(
-                  icon: Icons.dark_mode_rounded,
+                  icon: Iconsax.moon,
                   iconColor: AppColors.textSecondary,
                   title: 'Тёмная тема',
                   subtitle: 'Светлая появится позже',
@@ -178,7 +179,7 @@ class _ReadingSettingsCard extends StatelessWidget {
         child: Column(
           children: [
             _ReadingSettingHeader(
-              icon: Icons.translate_rounded,
+              icon: Iconsax.translate,
               title: 'Отображение текста',
               iconColor: AppColors.accent,
             ),
@@ -200,7 +201,7 @@ class _ReadingSettingsCard extends StatelessWidget {
                   Row(
                     children: [
                       const _ReadingSettingHeader(
-                        icon: Icons.speed_rounded,
+                        icon: Iconsax.speedometer,
                         title: 'Скорость по умолчанию',
                         iconColor: AppColors.accent,
                       ),
@@ -415,7 +416,7 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
     );
 
     return _SettingsRow(
-      icon: Icons.notifications_none_rounded,
+      icon: Iconsax.notification,
       iconColor: AppColors.accent,
       title: 'Напоминания',
       subtitle: 'Намазы и ежечасные аяты о покаянии',
@@ -464,7 +465,7 @@ class _CacheManagementRowState extends ConsumerState<_CacheManagementRow> {
   @override
   Widget build(BuildContext context) {
     return _SettingsRow(
-      icon: Icons.download_done_rounded,
+      icon: Iconsax.tick_circle,
       iconColor: AppColors.accent,
       title: 'Скачанные аяты',
       subtitle: _bytes == null ? 'Подсчёт…' : _format(_bytes!),
@@ -506,7 +507,7 @@ class _VersionRow extends StatelessWidget {
             ? '—'
             : '${info.version} (${info.buildNumber})';
         return _SettingsRow(
-          icon: Icons.info_outline_rounded,
+          icon: Iconsax.info_circle,
           iconColor: AppColors.textSecondary,
           title: 'Версия',
           trailing: Text(value, style: AppTextStyles.caption),
