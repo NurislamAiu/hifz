@@ -541,6 +541,7 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
               value: enabled,
               onChanged: _onChanged,
               activeThumbColor: SoftPalette.primary,
+        activeTrackColor: Colors.grey[100],
             ),
     );
   }

@@ -95,39 +95,47 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
+              // Decorative background (looping video + blur scrim). Excluded
+              // from semantics: it carries no accessible content, and its
+              // BackdropFilter/AnimatedSwitcher layers trip the framework's
+              // semantics-geometry pass (identical(childRenderObject, ...)).
               Positioned.fill(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 550),
-                  // Force every (incoming/outgoing) child to fill the sheet, so
-                  // the video covers the whole background instead of shrinking
-                  // to its intrinsic size.
-                  layoutBuilder: (currentChild, previousChildren) => Stack(
-                    fit: StackFit.expand,
-                    children: [...previousChildren, ?currentChild],
+                child: ExcludeSemantics(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 550),
+                    // Force every (incoming/outgoing) child to fill the sheet, so
+                    // the video covers the whole background instead of shrinking
+                    // to its intrinsic size.
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      fit: StackFit.expand,
+                      children: [...previousChildren, ?currentChild],
+                    ),
+                    child: (ambianceScene != null && ambianceVideo != null)
+                        ? _AmbianceVideo(
+                            key: ValueKey(ambianceScene),
+                            controller: ambianceVideo,
+                          )
+                        : const SizedBox.shrink(key: ValueKey('no-ambiance')),
                   ),
-                  child: (ambianceScene != null && ambianceVideo != null)
-                      ? _AmbianceVideo(
-                          key: ValueKey(ambianceScene),
-                          controller: ambianceVideo,
-                        )
-                      : const SizedBox.shrink(key: ValueKey('no-ambiance')),
                 ),
               ),
               if (ambianceScene != null && showScrim)
                 Positioned.fill(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.22),
-                            Colors.black.withValues(alpha: 0.34),
-                            Colors.black.withValues(alpha: 0.5),
-                          ],
-                          stops: const [0.0, 0.55, 1.0],
+                  child: ExcludeSemantics(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.22),
+                              Colors.black.withValues(alpha: 0.34),
+                              Colors.black.withValues(alpha: 0.5),
+                            ],
+                            stops: const [0.0, 0.55, 1.0],
+                          ),
                         ),
                       ),
                     ),
@@ -224,22 +232,39 @@ class _PlayerContent extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: onDark
-                      ? Colors.white.withValues(alpha: 0.16)
-                      : SoftPalette.light,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${ayah.numberInSurah}:${state.ayahs.length}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: onDark ? Colors.white : SoftPalette.primary,
-                    fontWeight: FontWeight.w700,
+              // Tap the "current:total" badge to open the ayah list and jump to
+              // any ayah in the surah.
+              InkWell(
+                onTap: () => AyahListSheet.show(context),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: onDark
+                        ? Colors.white.withValues(alpha: 0.16)
+                        : SoftPalette.light,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${ayah.numberInSurah}:${state.ayahs.length}',
+                        style: AppTextStyles.caption.copyWith(
+                          color: onDark ? Colors.white : SoftPalette.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Iconsax.arrow_down_1,
+                        size: 12,
+                        color: onDark ? Colors.white : SoftPalette.primary,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -534,6 +559,7 @@ Future<void> _showLoopMenu(
   bool matches(LoopSettings loop) =>
       current.enabled == loop.enabled &&
       current.infinite == loop.infinite &&
+      current.scope == loop.scope &&
       (loop.infinite ||
           !loop.enabled ||
           current.repeatCount == loop.repeatCount);
@@ -575,19 +601,52 @@ Future<void> _showLoopMenu(
       item(LoopSettings.off, context.s.disabled),
       item(
         const LoopSettings(enabled: true, repeatCount: 3),
-        context.s.repeatTimes(3),
+        context.s.repeatAyahTimes(3),
       ),
       item(
         const LoopSettings(enabled: true, repeatCount: 5),
-        context.s.repeatTimes(5),
+        context.s.repeatAyahTimes(5),
       ),
       item(
         const LoopSettings(enabled: true, repeatCount: 10),
-        context.s.repeatTimes(10),
+        context.s.repeatAyahTimes(10),
       ),
       item(
         const LoopSettings(enabled: true, infinite: true),
-        context.s.infinite,
+        context.s.repeatAyahInfinite,
+      ),
+      const PopupMenuDivider(height: 10),
+      item(
+        const LoopSettings(
+          enabled: true,
+          repeatCount: 2,
+          scope: LoopScope.surah,
+        ),
+        context.s.repeatSurahTimes(2),
+      ),
+      item(
+        const LoopSettings(
+          enabled: true,
+          repeatCount: 3,
+          scope: LoopScope.surah,
+        ),
+        context.s.repeatSurahTimes(3),
+      ),
+      item(
+        const LoopSettings(
+          enabled: true,
+          repeatCount: 5,
+          scope: LoopScope.surah,
+        ),
+        context.s.repeatSurahTimes(5),
+      ),
+      item(
+        const LoopSettings(
+          enabled: true,
+          infinite: true,
+          scope: LoopScope.surah,
+        ),
+        context.s.repeatSurahInfinite,
       ),
     ],
   );
@@ -652,6 +711,12 @@ class _AyahCarousel extends ConsumerStatefulWidget {
 class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
   late final PageController _controller;
 
+  // True while we're programmatically following playback. A long follow (e.g.
+  // a surah looping from the last ayah back to the first) scrolls through every
+  // intermediate page, and PageView fires onPageChanged for each of them — we
+  // must ignore those so they don't hijack playback to a random middle ayah.
+  bool _isFollowing = false;
+
   @override
   void initState() {
     super.initState();
@@ -667,11 +732,16 @@ class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
     // Follow playback: animate to the ayah that just became current.
     if (oldWidget.state.currentIndex != widget.state.currentIndex &&
         _controller.hasClients) {
-      _controller.animateToPage(
-        widget.state.currentIndex,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOutCubic,
-      );
+      _isFollowing = true;
+      _controller
+          .animateToPage(
+            widget.state.currentIndex,
+            duration: const Duration(milliseconds: 420),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() {
+            if (mounted) _isFollowing = false;
+          });
     }
   }
 
@@ -691,8 +761,10 @@ class _AyahCarouselState extends ConsumerState<_AyahCarousel> {
       scrollDirection: Axis.vertical,
       itemCount: ayahs.length,
       onPageChanged: (i) {
-        // Only react to user-driven changes (a programmatic follow lands exactly
-        // on the current index, so this is a no-op then).
+        // Only react to user-driven swipes. While we're programmatically
+        // following playback the animation passes through intermediate pages,
+        // and reacting to those would seek to a random ayah.
+        if (_isFollowing) return;
         if (i != widget.state.currentIndex) {
           ref
               .read(playerControllerProvider.notifier)

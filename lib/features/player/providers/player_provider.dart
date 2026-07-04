@@ -1,25 +1,34 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
+import 'package:just_audio_background/just_audio_background.dart';
 
 import '../../../data/models/ayah.dart';
 import '../../../data/providers.dart';
 import '../../settings/providers/settings_provider.dart';
 
+enum LoopScope { ayah, surah }
+
 class LoopSettings {
   final bool enabled;
   final bool infinite;
   final int repeatCount;
+  final LoopScope scope;
 
   const LoopSettings({
     this.enabled = false,
     this.infinite = false,
     this.repeatCount = 3,
+    this.scope = LoopScope.ayah,
   });
 
   static const off = LoopSettings();
+
+  bool get repeatsAyah => enabled && scope == LoopScope.ayah;
+  bool get repeatsSurah => enabled && scope == LoopScope.surah;
 }
 
 class PlayerViewState {
@@ -93,6 +102,7 @@ class PlayerController extends Notifier<PlayerViewState?> {
   @override
   PlayerViewState? build() {
     _player = ja.AudioPlayer();
+    unawaited(_configureAudioSession());
     ref.onDispose(_player.dispose);
 
     _statsTicker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -107,12 +117,17 @@ class PlayerController extends Notifier<PlayerViewState?> {
       if (s != null) state = s.copyWith(position: pos);
     });
     _player.durationStream.listen((d) {
-      final s = state;
-      if (s != null && d != null) state = s.copyWith(duration: d);
+      _setKnownDuration(d);
+    });
+    _player.sequenceStateStream.listen((sequenceState) {
+      _setKnownDuration(sequenceState.currentSource?.duration);
     });
     _player.playingStream.listen((playing) {
       final s = state;
       if (s != null) state = s.copyWith(isPlaying: playing);
+    });
+    _player.currentIndexStream.listen((index) {
+      unawaited(_syncCurrentIndex(index));
     });
     _player.processingStateStream.listen((ps) {
       final s = state;
@@ -123,11 +138,16 @@ class PlayerController extends Notifier<PlayerViewState?> {
             ps == ja.ProcessingState.loading,
       );
       if (ps == ja.ProcessingState.completed) {
-        _onAyahCompleted();
+        unawaited(_handlePlaybackCompleted());
       }
     });
 
     return null;
+  }
+
+  Future<void> _configureAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
   }
 
   Future<void> loadSurah(int surahNumber, {int startAyah = 1}) async {
@@ -153,53 +173,129 @@ class PlayerController extends Notifier<PlayerViewState?> {
     );
 
     await _player.setSpeed(settings.playbackSpeed);
-    await _loadCurrentAyah(autoplay: true);
+    await _player.setLoopMode(ja.LoopMode.off);
+    await _loadSurahQueue(autoplay: true);
     await ref
         .read(recentlyPlayedRepositoryProvider)
         .add(surahNumber, state!.currentIndex + 1);
   }
 
-  Future<void> _loadCurrentAyah({bool autoplay = false}) async {
+  Future<void> _loadSurahQueue({bool autoplay = false}) async {
     final s = state;
     if (s == null) return;
-    final ayah = s.currentAyah;
     final reciter = ref.read(selectedReciterProvider);
     final audioRepo = ref.read(audioRepositoryProvider);
+    final sources = <ja.AudioSource>[];
 
-    final localPath = await audioRepo.localPath(
-      reciterFolder: reciter.folder,
-      surahNumber: ayah.surahNumber,
-      ayahNumberInSurah: ayah.numberInSurah,
-    );
-
-    if (await File(localPath).exists()) {
-      await _player.setFilePath(localPath);
-    } else {
-      final url = audioRepo.remoteUrl(
+    for (final ayah in s.ayahs) {
+      final localPath = await audioRepo.localPath(
         reciterFolder: reciter.folder,
         surahNumber: ayah.surahNumber,
         ayahNumberInSurah: ayah.numberInSurah,
       );
-      await _player.setUrl(url);
-      unawaited(
-        audioRepo.downloadAyah(
-          reciterFolder: reciter.folder,
-          surahNumber: ayah.surahNumber,
-          ayahNumberInSurah: ayah.numberInSurah,
+      final uri = await File(localPath).exists()
+          ? Uri.file(localPath)
+          : Uri.parse(
+              audioRepo.remoteUrl(
+                reciterFolder: reciter.folder,
+                surahNumber: ayah.surahNumber,
+                ayahNumberInSurah: ayah.numberInSurah,
+              ),
+            );
+
+      sources.add(
+        ja.AudioSource.uri(
+          uri,
+          tag: MediaItem(
+            id: '${ayah.surahNumber}:${ayah.numberInSurah}',
+            album: s.surahNameTransliteration,
+            title:
+                '${s.surahNameTransliteration} ${ayah.surahNumber}:${ayah.numberInSurah}',
+            artist: reciter.name,
+            displayTitle: s.surahNameArabic,
+            displaySubtitle: 'Аят ${ayah.numberInSurah}',
+          ),
         ),
       );
     }
+
+    final duration = await _player.setAudioSources(
+      sources,
+      initialIndex: s.currentIndex,
+      initialPosition: Duration.zero,
+    );
+    _setKnownDuration(duration ?? _player.duration);
 
     if (autoplay || s.isPlaying) {
       await _player.play();
     }
   }
 
-  Future<void> _onAyahCompleted() async {
+  Future<void> _syncCurrentIndex(int? index) async {
+    final s = state;
+    if (s == null || index == null || index == s.currentIndex) return;
+    if (index < 0 || index >= s.ayahs.length) return;
+
+    var loop = s.loop;
+    var repeatsRemaining = s.loop.repeatsAyah && !s.loop.infinite
+        ? s.loop.repeatCount
+        : s.repeatsRemaining;
+    final wrappedSurah =
+        s.loop.repeatsSurah &&
+        s.currentIndex == s.ayahs.length - 1 &&
+        index == 0;
+
+    if (index == s.currentIndex + 1 && s.loop.repeatsAyah) {
+      if (s.loop.infinite || s.repeatsRemaining > 1) {
+        state = s.copyWith(
+          repeatsRemaining: s.loop.infinite
+              ? s.repeatsRemaining
+              : s.repeatsRemaining - 1,
+          position: Duration.zero,
+        );
+        await _player.seek(Duration.zero, index: s.currentIndex);
+        if (s.isPlaying) {
+          await _player.play();
+        }
+        return;
+      }
+      loop = LoopSettings.off;
+      repeatsRemaining = 0;
+    }
+
+    if (wrappedSurah && !s.loop.infinite) {
+      if (s.repeatsRemaining > 1) {
+        repeatsRemaining = s.repeatsRemaining - 1;
+        if (repeatsRemaining == 1) {
+          unawaited(_player.setLoopMode(ja.LoopMode.off));
+        }
+      } else {
+        loop = LoopSettings.off;
+        repeatsRemaining = 0;
+        unawaited(_player.setLoopMode(ja.LoopMode.off));
+      }
+    }
+
+    state = s.copyWith(
+      currentIndex: index,
+      position: Duration.zero,
+      loop: loop,
+      repeatsRemaining: repeatsRemaining,
+    );
+    _setKnownDuration(_durationForIndex(index) ?? _player.duration);
+  }
+
+  Future<void> _handlePlaybackCompleted() async {
     final s = state;
     if (s == null) return;
 
-    if (s.loop.enabled) {
+    if (s.loop.repeatsSurah && !s.loop.infinite && s.repeatsRemaining <= 1) {
+      state = s.copyWith(loop: LoopSettings.off, repeatsRemaining: 0);
+      await _player.setLoopMode(ja.LoopMode.off);
+      return;
+    }
+
+    if (s.loop.repeatsAyah) {
       if (s.loop.infinite || s.repeatsRemaining > 1) {
         state = s.copyWith(
           repeatsRemaining: s.loop.infinite
@@ -230,6 +326,12 @@ class PlayerController extends Notifier<PlayerViewState?> {
     final s = state;
     if (s == null) return;
     if (!s.hasNext) {
+      if (s.loop.repeatsSurah) {
+        state = s.copyWith(currentIndex: 0, position: Duration.zero);
+        await _seekToIndex(0);
+        await _player.play();
+        return;
+      }
       await _player.pause();
       await _player.seek(Duration.zero);
       return;
@@ -237,11 +339,10 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: s.currentIndex + 1,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite
-          ? s.loop.repeatCount
-          : 0,
+      repeatsRemaining: _repeatsRemainingAfterAyahChange(s),
     );
-    await _loadCurrentAyah(autoplay: s.isPlaying || true);
+    await _seekToIndex(s.currentIndex + 1);
+    await _player.play();
   }
 
   Future<void> previous() async {
@@ -258,11 +359,10 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: s.currentIndex - 1,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite
-          ? s.loop.repeatCount
-          : 0,
+      repeatsRemaining: _repeatsRemainingAfterAyahChange(s),
     );
-    await _loadCurrentAyah(autoplay: true);
+    await _seekToIndex(s.currentIndex - 1);
+    await _player.play();
   }
 
   Future<void> jumpToAyah(int ayahNumberInSurah) async {
@@ -273,11 +373,10 @@ class PlayerController extends Notifier<PlayerViewState?> {
     state = s.copyWith(
       currentIndex: index,
       position: Duration.zero,
-      repeatsRemaining: s.loop.enabled && !s.loop.infinite
-          ? s.loop.repeatCount
-          : 0,
+      repeatsRemaining: _repeatsRemainingAfterAyahChange(s),
     );
-    await _loadCurrentAyah(autoplay: true);
+    await _seekToIndex(index);
+    await _player.play();
   }
 
   Future<void> seek(Duration position) => _player.seek(position);
@@ -300,10 +399,42 @@ class PlayerController extends Notifier<PlayerViewState?> {
   void setLoop(LoopSettings loop) {
     final s = state;
     if (s == null) return;
+    unawaited(
+      _player.setLoopMode(
+        loop.repeatsSurah ? ja.LoopMode.all : ja.LoopMode.off,
+      ),
+    );
     state = s.copyWith(
       loop: loop,
-      repeatsRemaining: loop.infinite ? 0 : loop.repeatCount,
+      repeatsRemaining: loop.enabled && !loop.infinite ? loop.repeatCount : 0,
     );
+  }
+
+  int _repeatsRemainingAfterAyahChange(PlayerViewState s) {
+    if (!s.loop.repeatsAyah || s.loop.infinite) return s.repeatsRemaining;
+    return s.loop.repeatCount;
+  }
+
+  Future<void> _seekToIndex(int index) async {
+    await _player.seek(Duration.zero, index: index);
+    _setKnownDuration(_durationForIndex(index) ?? _player.duration);
+  }
+
+  Duration? _durationForIndex(int index) {
+    try {
+      final sequence = _player.sequence;
+      if (index < 0 || index >= sequence.length) return null;
+      return sequence[index].duration;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _setKnownDuration(Duration? duration) {
+    if (duration == null) return;
+    final s = state;
+    if (s == null || s.duration == duration) return;
+    state = s.copyWith(duration: duration);
   }
 
   void stopAndClear() {

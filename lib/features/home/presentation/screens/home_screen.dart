@@ -67,9 +67,10 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               const PrayerTimesCard(),
               const SizedBox(height: 24),
-              const StatsSection(),
-              const SizedBox(height: 24),
               const ContinueListeningCard(),
+              const SizedBox(height: 24),
+              const StatsSection(),
+
             ],
           ),
         ),

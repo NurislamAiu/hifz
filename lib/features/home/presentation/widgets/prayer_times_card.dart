@@ -1,17 +1,19 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide debugPrint;
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/daily_prayer_times.dart';
 import '../../../../data/providers.dart';
-import '../../providers/prayer_times_provider.dart';
 import '../../../settings/providers/settings_provider.dart';
-import '../../../../core/theme/soft_palette.dart';
+import '../../providers/prayer_times_provider.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 class PrayerTimesCard extends ConsumerStatefulWidget {
   const PrayerTimesCard({super.key});

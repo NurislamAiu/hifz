@@ -11,6 +11,7 @@ import 'repositories/progress_repository.dart';
 import 'repositories/quran_repository.dart';
 import 'repositories/recently_played_repository.dart';
 import 'repositories/settings_repository.dart';
+import 'repositories/widget_sync_repository.dart';
 
 final quranRepositoryProvider = Provider<QuranRepository>(
   (ref) => QuranRepository(),
@@ -57,4 +58,8 @@ final listeningStatsRepositoryProvider = Provider<ListeningStatsRepository>(
 
 final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => NotificationRepository(),
+);
+
+final widgetSyncRepositoryProvider = Provider<WidgetSyncRepository>(
+  (ref) => WidgetSyncRepository(),
 );

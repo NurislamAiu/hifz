@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../hive/hive_boxes.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 /// Resolves device coordinates for prayer-time calculation. Falls back to the
 /// last known (cached) position when permission is denied or the location

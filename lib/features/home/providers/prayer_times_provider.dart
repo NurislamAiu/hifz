@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_strings.dart';
@@ -8,6 +7,8 @@ import '../../../data/models/daily_prayer_times.dart';
 import '../../../data/models/prayer_city.dart';
 import '../../../data/providers.dart';
 import '../../settings/providers/settings_provider.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 /// Also refreshes notification schedules when they're enabled. Repentance
 /// reminders don't need location, but prayer-time notifications do.
@@ -52,6 +53,14 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
           ),
         );
       }
+      unawaited(
+        ref
+            .read(widgetSyncRepositoryProvider)
+            .savePrayerTimes(
+              prayerTimes: official,
+              language: AppLanguage.fromCode(settings.appLanguageCode),
+            ),
+      );
       return official;
     }
   }
@@ -113,6 +122,14 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
       ),
     );
   }
+  unawaited(
+    ref
+        .read(widgetSyncRepositoryProvider)
+        .savePrayerTimes(
+          prayerTimes: prayerTimes,
+          language: AppLanguage.fromCode(settings.appLanguageCode),
+        ),
+  );
 
   return prayerTimes;
 });

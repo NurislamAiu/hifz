@@ -178,6 +178,10 @@ class AppStrings {
   String juz(int number) => isKk ? '$number-жүз' : 'Джуз $number';
   String get bySurahs => isKk ? 'Сүрелер' : 'По сурам';
   String get byJuz => isKk ? 'Жүздер' : 'По джузам';
+  String juzSurahsCount(int count) => isKk ? '$count сүре' : '$count сур';
+  String juzStartsAt(String surah, int ayah) => isKk
+      ? '$surah · $ayah-аяттан'
+      : '$surah · с аята $ayah';
   String overviewDays(int days) =>
       isKk ? '$days күндік шолу' : 'Обзор за $days дней';
   String activeDaysSummary(int active, int total, int percent) => isKk
@@ -271,6 +275,14 @@ class AppStrings {
   String get disabled => isKk ? 'Өшірулі' : 'Выключено';
   String repeatTimes(int count) =>
       isKk ? '$count рет қайталау' : 'Повторить $count раза';
+  String repeatAyahTimes(int count) =>
+      isKk ? 'Аятты $count рет қайталау' : 'Повторить аят $count раза';
+  String repeatSurahTimes(int count) =>
+      isKk ? 'Сүрені $count рет қайталау' : 'Повторить суру $count раза';
+  String get repeatAyahInfinite =>
+      isKk ? 'Аятты шексіз қайталау' : 'Повторять аят бесконечно';
+  String get repeatSurahInfinite =>
+      isKk ? 'Сүрені шексіз қайталау' : 'Повторять суру бесконечно';
   String get infinite => isKk ? 'Шексіз' : 'Бесконечно';
   String get arabic => isKk ? 'Арабша' : 'Арабский';
   String get arabicTranscription =>

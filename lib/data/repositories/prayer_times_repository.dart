@@ -1,5 +1,4 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/foundation.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -9,6 +8,8 @@ import '../models/prayer_calculation_method.dart';
 import '../models/prayer_schedule.dart';
 import 'next_prayer_service.dart';
 import 'prayer_times_cache_repository.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 class PrayerTimesRepository {
   PrayerTimesRepository({

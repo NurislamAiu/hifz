@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 class AladhanApiClient {
   AladhanApiClient({Dio? dio})

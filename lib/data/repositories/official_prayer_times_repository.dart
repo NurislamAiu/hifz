@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -10,6 +9,8 @@ import '../models/prayer_calculation_method.dart';
 import '../models/prayer_city.dart';
 import '../models/prayer_schedule.dart';
 import 'next_prayer_service.dart';
+
+void debugPrint(String? message, {int? wrapWidth}) {}
 
 /// Serves the official Kazakhstan (ҚМДБ / muftyat.kz) prayer times bundled as a
 /// JSON asset — one entry per day for the major cities, ~2 years ahead. These

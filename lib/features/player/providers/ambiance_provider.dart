@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart' as ja;
 import 'package:video_player/video_player.dart';
 
 import 'player_provider.dart';
@@ -56,7 +55,7 @@ final ambianceNoiseVolumeProvider = StateProvider<double>((ref) => 0.6);
 /// it plays/pauses together with the Quran player.
 class AmbianceController extends Notifier<AmbianceScene?> {
   VideoPlayerController? _videoController;
-  ja.AudioPlayer? _soundPlayer;
+  VideoPlayerController? _soundController;
 
   /// Bumped on every switch/stop so a slower, superseded [select] (e.g. the
   /// user tapping a second scene while the first is still initializing) can
@@ -70,7 +69,7 @@ class AmbianceController extends Notifier<AmbianceScene?> {
     // Keep the ambient noise level in sync with its slider.
     ref.listen(
       ambianceNoiseVolumeProvider,
-      (_, next) => _soundPlayer?.setVolume(next),
+      (_, next) => _soundController?.setVolume(next),
     );
     // Chain the whole ambience (video + noise) to the recitation's play/pause
     // state (only react when it actually flips, not on every position tick).
@@ -83,7 +82,7 @@ class AmbianceController extends Notifier<AmbianceScene?> {
     ref.onDispose(() {
       _videoController?.removeListener(_resumeIfPaused);
       _videoController?.dispose();
-      _soundPlayer?.dispose();
+      _soundController?.dispose();
     });
     return null;
   }
@@ -100,9 +99,9 @@ class AmbianceController extends Notifier<AmbianceScene?> {
   Future<void> stop() async {
     _generation++;
     final prevVideo = _videoController;
-    final prevSound = _soundPlayer;
+    final prevSound = _soundController;
     _videoController = null;
-    _soundPlayer = null;
+    _soundController = null;
     state = null;
     _retire(prevVideo, prevSound);
   }
@@ -146,36 +145,43 @@ class AmbianceController extends Notifier<AmbianceScene?> {
       return;
     }
 
-    // Ambient sound loop, level-matched to the noise slider.
-    final sound = ja.AudioPlayer();
+    // Keep ambience out of just_audio_background. That plugin supports only
+    // one just_audio player, so the Quran recitation owns system controls.
+    VideoPlayerController? sound;
     try {
-      await sound.setAsset(scene.audioAsset);
-      await sound.setLoopMode(ja.LoopMode.one);
+      sound = VideoPlayerController.asset(
+        scene.audioAsset,
+        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      );
+      await sound.initialize();
+      await sound.setLooping(true);
       await sound.setVolume(ref.read(ambianceNoiseVolumeProvider));
+      if (quranPlaying) {
+        await sound.play();
+      }
     } catch (e, st) {
       debugPrint(
         '[Ambiance] audio init failed for ${scene.audioAsset}: $e\n$st',
       );
+      await sound?.dispose();
+      sound = null;
     }
     if (gen != _generation) {
       await video.dispose();
-      await sound.dispose();
+      await sound?.dispose();
       return;
     }
 
     // Swap the new scene in and retire the outgoing one with a short fade-out.
     final prevVideo = _videoController;
-    final prevSound = _soundPlayer;
+    final prevSound = _soundController;
 
     _videoController = video;
     // The recitation player can activate the iOS audio session *after* we start
     // playing, which pauses the muted AVPlayer. Keep nudging it back into play
     // whenever it stops while the scene is still meant to be active.
     video.addListener(_resumeIfPaused);
-    _soundPlayer = sound;
-    // NOTE: just_audio's play() future only completes when playback is
-    // paused/stopped, so for a loop it never returns — must NOT be awaited.
-    if (quranPlaying) sound.play();
+    _soundController = sound;
 
     state = scene;
 
@@ -184,7 +190,7 @@ class AmbianceController extends Notifier<AmbianceScene?> {
 
   /// Keeps the outgoing scene's players alive briefly so the UI crossfade can
   /// finish, then disposes them.
-  void _retire(VideoPlayerController? video, ja.AudioPlayer? sound) {
+  void _retire(VideoPlayerController? video, VideoPlayerController? sound) {
     if (video == null && sound == null) return;
     video?.removeListener(_resumeIfPaused);
     sound?.pause();
@@ -198,10 +204,10 @@ class AmbianceController extends Notifier<AmbianceScene?> {
     if (state == null) return;
     if (playing) {
       _videoController?.play();
-      _soundPlayer?.play();
+      _soundController?.play();
     } else {
       _videoController?.pause();
-      _soundPlayer?.pause();
+      _soundController?.pause();
     }
   }
 

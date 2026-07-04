@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -79,6 +80,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           children: [
             Expanded(
               child: _StatChip(
+                icon: Iconsax.flash_1,
+                accent: const Color(0xFFF2A03D),
                 value: s.daysShort(
                   repo.currentStreak(goalSeconds: listeningGoalSeconds),
                 ),
@@ -88,6 +91,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
             const SizedBox(width: 12),
             Expanded(
               child: _StatChip(
+                icon: Iconsax.clock,
+                accent: SoftPalette.primary,
                 value: s.weekMinuteValue(weekMinutes),
                 label: s.thisWeek,
               ),
@@ -95,6 +100,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
             const SizedBox(width: 12),
             Expanded(
               child: _StatChip(
+                icon: Iconsax.medal_star,
+                accent: const Color(0xFF8E7CF0),
                 value: s.daysShort(
                   repo.recordStreak(goalSeconds: listeningGoalSeconds),
                 ),
@@ -125,67 +132,81 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
         const SizedBox(height: 14),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
           decoration: BoxDecoration(
-            color: SoftPalette.light,
-            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1BAAB6), Color(0xFF0B6771)],
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: SoftPalette.primary.withValues(alpha: 0.32),
+                blurRadius: 28,
+                offset: const Offset(0, 16),
+              ),
+            ],
           ),
           child: Column(
             children: [
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: progress),
-                duration: const Duration(milliseconds: 450),
+                duration: const Duration(milliseconds: 650),
                 curve: Curves.easeOutCubic,
                 builder: (context, animatedProgress, _) {
                   return SizedBox(
-                    width: 180,
-                    height: 180,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox.expand(
-                          child: CircularProgressIndicator(
-                            value: animatedProgress,
-                            strokeWidth: 12,
-                            strokeCap: StrokeCap.round,
-                            backgroundColor: Colors.white,
-                            valueColor: const AlwaysStoppedAnimation(
-                              SoftPalette.primary,
-                            ),
-                          ),
-                        ),
-                        Column(
+                    width: 190,
+                    height: 190,
+                    child: CustomPaint(
+                      painter: _ProgressRingPainter(
+                        progress: animatedProgress,
+                        trackColor: Colors.white.withValues(alpha: 0.16),
+                      ),
+                      child: Center(
+                        child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               s.listeningToday,
                               style: AppTextStyles.caption.copyWith(
-                                color: SoftPalette.primaryDark,
+                                color: Colors.white.withValues(alpha: 0.72),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
                               _formatMmSs(todaySeconds),
                               style: AppTextStyles.displayTitle.copyWith(
-                                fontSize: 32,
-                                color: SoftPalette.textDark,
+                                fontSize: 42,
+                                color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              s.goalMinutes(listeningGoalMinutes),
-                              style: AppTextStyles.caption.copyWith(
-                                color: SoftPalette.textSecondary,
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                s.goalMinutes(listeningGoalMinutes),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -325,14 +346,22 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
 }
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.value, required this.label});
+  const _StatChip({
+    required this.icon,
+    required this.accent,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color accent;
   final String value;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
       decoration: BoxDecoration(
         color: SoftPalette.surface,
         borderRadius: BorderRadius.circular(22),
@@ -340,18 +369,33 @@ class _StatChip extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: accent, size: 19),
+          ),
+          const SizedBox(height: 9),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTextStyles.title.copyWith(
-              fontSize: 17,
-              color: SoftPalette.primary,
+              fontSize: 16,
+              color: SoftPalette.textDark,
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTextStyles.caption.copyWith(
               color: SoftPalette.textSecondary,
+              fontSize: 12,
             ),
           ),
         ],
@@ -549,33 +593,98 @@ class _WeekDay extends StatelessWidget {
   Widget build(BuildContext context) {
     final done = status == true;
 
-    final dot = Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: done ? SoftPalette.primary : Colors.white,
-        border: Border.all(
-          color: done
-              ? SoftPalette.primary
-              : (isToday ? SoftPalette.primary : SoftPalette.track),
-          width: isToday && !done ? 2 : 1,
+    final Widget dot;
+    if (done) {
+      dot = Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
         ),
-      ),
-    );
+        child: const Icon(
+          Icons.check_rounded,
+          size: 18,
+          color: SoftPalette.primaryDark,
+        ),
+      );
+    } else {
+      dot = Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: isToday ? 0.0 : 0.10),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isToday ? 0.95 : 0.35),
+            width: isToday ? 2 : 1,
+          ),
+        ),
+      );
+    }
 
     return Column(
       children: [
         dot,
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           label,
           style: AppTextStyles.caption.copyWith(
-            color: isToday ? SoftPalette.textDark : SoftPalette.textSecondary,
-            fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
+            color: Colors.white.withValues(
+              alpha: isToday || done ? 0.95 : 0.6,
+            ),
+            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 12,
           ),
         ),
       ],
     );
   }
+}
+
+/// Rounded progress ring with a bright sweep gradient over a faint track, so
+/// the "listened today" figure reads as a glowing arc on the teal hero card.
+class _ProgressRingPainter extends CustomPainter {
+  _ProgressRingPainter({required this.progress, required this.trackColor});
+
+  final double progress;
+  final Color trackColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 13.0;
+    final center = size.center(Offset.zero);
+    final radius = (size.shortestSide - stroke) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    final trackPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = trackColor;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    final clamped = progress.clamp(0.0, 1.0);
+    if (clamped <= 0) return;
+
+    const start = -pi / 2;
+    final sweep = 2 * pi * clamped;
+    final shader = const SweepGradient(
+      startAngle: 0,
+      endAngle: 2 * pi,
+      colors: [Color(0xFF9BF1F6), Colors.white],
+      transform: GradientRotation(start),
+    ).createShader(rect);
+
+    final progressPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..shader = shader;
+    canvas.drawArc(rect, start, sweep, false, progressPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProgressRingPainter old) =>
+      old.progress != progress || old.trackColor != trackColor;
 }

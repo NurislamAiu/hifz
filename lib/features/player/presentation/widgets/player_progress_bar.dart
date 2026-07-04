@@ -18,9 +18,15 @@ class PlayerProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = duration.inMilliseconds == 0 ? 1 : duration.inMilliseconds;
-    final value = (position.inMilliseconds / total).clamp(0.0, 1.0);
-    final remaining = duration - position;
+    final hasDuration = duration > Duration.zero;
+    final clampedPosition = hasDuration && position > duration
+        ? duration
+        : position;
+    final total = hasDuration ? duration.inMilliseconds : 1;
+    final value = hasDuration
+        ? (clampedPosition.inMilliseconds / total).clamp(0.0, 1.0)
+        : 0.0;
+    final remaining = hasDuration ? duration - clampedPosition : Duration.zero;
 
     return Column(
       children: [
@@ -34,8 +40,9 @@ class PlayerProgressBar extends StatelessWidget {
             value: value,
             activeColor: SoftPalette.primary,
             inactiveColor: SoftPalette.track,
-            onChanged: (v) =>
-                onSeek(Duration(milliseconds: (v * total).round())),
+            onChanged: hasDuration
+                ? (v) => onSeek(Duration(milliseconds: (v * total).round()))
+                : null,
           ),
         ),
         Padding(
@@ -44,13 +51,13 @@ class PlayerProgressBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                position.mmss,
+                clampedPosition.mmss,
                 style: AppTextStyles.caption.copyWith(
                   color: SoftPalette.textSecondary,
                 ),
               ),
               Text(
-                '-${remaining.isNegative ? Duration.zero.mmss : remaining.mmss}',
+                hasDuration ? '-${remaining.mmss}' : Duration.zero.mmss,
                 style: AppTextStyles.caption.copyWith(
                   color: SoftPalette.textSecondary,
                 ),

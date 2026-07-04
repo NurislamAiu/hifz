@@ -78,42 +78,63 @@ class NotificationRepository {
 
   static const _firmRepentanceReminders = [
     _RepentanceReminder(
-      reference: '57:16',
+      reference: '4:56',
       text:
-          'Не пора ли сердцам смириться перед поминанием Аллаха, пока сердце не очерствело?',
+          'Тех, кто отверг Наши знамения, Мы сожжём в Огне. Едва их кожа сготовится, Мы заменим её новой, чтобы они вкусили мучения.',
     ),
     _RepentanceReminder(
-      reference: '63:10',
+      reference: '66:6',
       text:
-          'Покайтесь до того, как придёт смерть и вы попросите ещё немного времени.',
+          'Оберегайте себя и свои семьи от Огня, растопкой которого будут люди и камни.',
     ),
     _RepentanceReminder(
-      reference: '75:36',
+      reference: '22:19-20',
       text:
-          'Неужели человек думает, что будет оставлен без ответа за свои дела?',
+          'Для неверующих скроят одежды из Огня, а на головы им будут лить кипяток, расплавляющий их внутренности и кожу.',
     ),
     _RepentanceReminder(
-      reference: '82:6',
-      text: 'Что обмануло тебя относительно твоего Великодушного Господа?',
-    ),
-    _RepentanceReminder(
-      reference: '89:23',
+      reference: '14:49-50',
       text:
-          'В тот День человек вспомнит назидание, но какая польза будет от позднего сожаления?',
+          'В тот День ты увидишь грешников, закованных в цепи, в одеяниях из смолы, и Огонь будет покрывать их лица.',
     ),
     _RepentanceReminder(
-      reference: '102:1-2',
-      text: 'Страсть к накоплению отвлекает вас, пока вы не посетите могилы.',
-    ),
-    _RepentanceReminder(
-      reference: '99:7-8',
+      reference: '69:30-32',
       text:
-          'Кто сделал добро весом с пылинку, увидит его. И кто сделал зло, увидит его.',
+          'Схватите его и закуйте, потом бросьте в Ад, потом стяните цепью длиной в семьдесят локтей.',
     ),
     _RepentanceReminder(
-      reference: '59:18',
+      reference: '50:19',
+      text: 'Опьянение смертью явится с истиной. Вот то, от чего ты убегал!',
+    ),
+    _RepentanceReminder(
+      reference: '23:99-100',
       text:
-          'Бойтесь Аллаха, и пусть каждая душа посмотрит, что приготовила на завтра.',
+          'Когда к нему приходит смерть, он молит: «Господи, верни меня!» Но нет — позади них преграда до Дня воскрешения.',
+    ),
+    _RepentanceReminder(
+      reference: '40:18',
+      text:
+          'Предупреди их о приближающемся Дне, когда сердца подступят к горлу и они будут задыхаться от скорби.',
+    ),
+    _RepentanceReminder(
+      reference: '79:37-39',
+      text:
+          'Тому, кто преступил границы и предпочёл мирскую жизнь, пристанищем будет Ад.',
+    ),
+    _RepentanceReminder(
+      reference: '101:6-9',
+      text:
+          'Чья чаша дел перевесит — тот в блаженстве. А чья окажется лёгкой — матерью его станет Бездна огня.',
+    ),
+    _RepentanceReminder(
+      reference: '78:40',
+      text:
+          'Мы предостерегли вас о близком наказании. В тот День человек увидит то, что уготовили его руки.',
+    ),
+    _RepentanceReminder(
+      reference: '89:23-24',
+      text:
+          'В тот День приведут Ад. Тогда человек опомнится, но какая польза от позднего раскаяния?',
     ),
   ];
 
@@ -156,38 +177,62 @@ class NotificationRepository {
 
   static const _firmRepentanceRemindersKk = [
     _RepentanceReminder(
-      reference: '57:16',
-      text: 'Жүректер Алланы еске алғанда жұмсаратын уақыт келмеді ме?',
-    ),
-    _RepentanceReminder(
-      reference: '63:10',
+      reference: '4:56',
       text:
-          'Өлім келмей тұрып тәубе етіңіз, кейін тағы уақыт сұрау кеш болады.',
+          'Аяттарымызды терістегендерді Отқа саламыз. Терілері күйіп біткен сайын, азапты татуы үшін жаңа теріге ауыстырамыз.',
     ),
     _RepentanceReminder(
-      reference: '75:36',
-      text: 'Адам өз істері үшін жауапсыз қаламын деп ойлай ма?',
-    ),
-    _RepentanceReminder(
-      reference: '82:6',
-      text: 'Сені Жомарт Раббың жайында не алдап қойды?',
-    ),
-    _RepentanceReminder(
-      reference: '89:23',
-      text: 'Ол күні адам есіне алады, бірақ кеш өкініштен қандай пайда?',
-    ),
-    _RepentanceReminder(
-      reference: '102:1-2',
-      text: 'Көбейтуге құмарлық сендерді қабірге барғанға дейін алаңдатты.',
-    ),
-    _RepentanceReminder(
-      reference: '99:7-8',
+      reference: '66:6',
       text:
-          'Кім тозаңдай жақсылық жасаса, оны көреді. Кім тозаңдай жамандық жасаса, оны көреді.',
+          'Өздеріңді және үй-іштеріңді отыны адамдар мен тастар болатын Оттан сақтаңдар.',
     ),
     _RepentanceReminder(
-      reference: '59:18',
-      text: 'Алладан қорқыңдар, әр жан ертеңге не дайындағанына қарасын.',
+      reference: '22:19-20',
+      text:
+          'Кәпірлерге оттан киім пішіледі, бастарына қайнаған су құйылып, ішек-қарны мен терісі ериді.',
+    ),
+    _RepentanceReminder(
+      reference: '14:49-50',
+      text:
+          'Ол күні күнәкарларды кісендеулі, шайыр киім киген, беттерін От жалмаған күйде көресің.',
+    ),
+    _RepentanceReminder(
+      reference: '69:30-32',
+      text:
+          'Оны ұстаңдар да кісендеңдер, сосын Тозаққа тастаңдар, содан кейін жетпіс кез шынжырмен байлаңдар.',
+    ),
+    _RepentanceReminder(
+      reference: '50:19',
+      text: 'Өлім мастығы шындықпен келеді. Міне, сен қашқан нәрсе — осы!',
+    ),
+    _RepentanceReminder(
+      reference: '23:99-100',
+      text:
+          'Оған өлім келгенде: «Раббым, мені қайтаршы!» — дейді. Жоқ! Артында қайта тірілу Күніне дейін тосқауыл бар.',
+    ),
+    _RepentanceReminder(
+      reference: '40:18',
+      text:
+          'Оларды жақындаған Күннен сақтандыр: жүректер тамаққа тығылып, қайғыдан тұншығады.',
+    ),
+    _RepentanceReminder(
+      reference: '79:37-39',
+      text: 'Шектен шығып, дүние тіршілігін артық көргеннің барар жері — Тозақ.',
+    ),
+    _RepentanceReminder(
+      reference: '101:6-9',
+      text:
+          'Амал таразысы ауыр болған рахатта болады. Жеңіл болғанның мекені — жалынды тұңғиық.',
+    ),
+    _RepentanceReminder(
+      reference: '78:40',
+      text:
+          'Сендерді жақын азаптан сақтандырдық. Ол күні адам қолымен не жібергенін көреді.',
+    ),
+    _RepentanceReminder(
+      reference: '89:23-24',
+      text:
+          'Ол күні Тозақ әкелінеді. Сонда адам есіне алады, бірақ кеш өкініштен қандай пайда?',
     ),
   ];
 
@@ -243,21 +288,35 @@ class NotificationRepository {
         iOS: const DarwinNotificationDetails(),
       );
 
-  NotificationDetails _repentanceDetailsFor(AppLanguage language) =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'repentance_reminders',
-          language == AppLanguage.kk
-              ? 'Тәубе ескертулері'
-              : 'Напоминания о покаянии',
-          channelDescription: language == AppLanguage.kk
-              ? 'Тәубе туралы аяттар және қазақша мағынасы'
-              : 'Аяты о покаянии с русским переводом',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-        ),
-        iOS: const DarwinNotificationDetails(),
-      );
+  NotificationDetails _repentanceDetailsFor(
+    AppLanguage language,
+    RepentanceReminderTone tone,
+    String bodyText,
+  ) {
+    // The "firm" tone is meant to jolt the reader — surface it as a high-
+    // priority heads-up alert rather than a quiet notification.
+    final firm = tone == RepentanceReminderTone.firm;
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'repentance_reminders',
+        language == AppLanguage.kk
+            ? 'Тәубе ескертулері'
+            : 'Напоминания о покаянии',
+        channelDescription: language == AppLanguage.kk
+            ? 'Тәубе туралы аяттар және қазақша мағынасы'
+            : 'Аяты о покаянии с русским переводом',
+        importance: firm ? Importance.high : Importance.defaultImportance,
+        priority: firm ? Priority.high : Priority.defaultPriority,
+        // Show the full verse instead of truncating it in the collapsed row.
+        styleInformation: BigTextStyleInformation(bodyText),
+      ),
+      iOS: DarwinNotificationDetails(
+        interruptionLevel: firm
+            ? InterruptionLevel.timeSensitive
+            : InterruptionLevel.active,
+      ),
+    );
+  }
 
   /// Replaces any previously scheduled prayer reminders with today's
   /// remaining ones.
@@ -319,7 +378,7 @@ class NotificationRepository {
             : 'Покаяние • Коран ${reminder.reference}',
         body: reminder.text,
         scheduledDate: tz.TZDateTime.from(scheduledTimes[i], tz.UTC),
-        notificationDetails: _repentanceDetailsFor(language),
+        notificationDetails: _repentanceDetailsFor(language, tone, reminder.text),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
       );
