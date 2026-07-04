@@ -12,6 +12,7 @@ import 'repositories/quran_repository.dart';
 import 'repositories/recently_played_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/widget_sync_repository.dart';
+import 'repositories/zikr_stats_repository.dart';
 
 final quranRepositoryProvider = Provider<QuranRepository>(
   (ref) => QuranRepository(),
@@ -54,6 +55,10 @@ final officialPrayerTimesRepositoryProvider =
 
 final listeningStatsRepositoryProvider = Provider<ListeningStatsRepository>(
   (ref) => ListeningStatsRepository(),
+);
+
+final zikrStatsRepositoryProvider = Provider<ZikrStatsRepository>(
+  (ref) => ZikrStatsRepository(),
 );
 
 final notificationRepositoryProvider = Provider<NotificationRepository>(

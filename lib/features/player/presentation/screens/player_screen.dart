@@ -252,7 +252,7 @@ class _PlayerContent extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${ayah.numberInSurah}:${state.ayahs.length}',
+                        '${ayah.surahNumber}:${ayah.numberInSurah}',
                         style: AppTextStyles.caption.copyWith(
                           color: onDark ? Colors.white : SoftPalette.primary,
                           fontWeight: FontWeight.w700,

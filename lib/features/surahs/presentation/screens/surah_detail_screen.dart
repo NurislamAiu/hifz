@@ -28,6 +28,13 @@ class SurahDetailScreen extends ConsumerWidget {
     final displayMode = ref.watch(settingsControllerProvider).displayMode;
 
     final surah = surahsAsync.value?.firstWhere((s) => s.number == surahNumber);
+    final isFavoriteSurah = ref.watch(
+      favoritesControllerProvider.select(
+        (list) => list.any(
+          (f) => f.type == FavoriteType.surah && f.surahNumber == surahNumber,
+        ),
+      ),
+    );
 
     return Scaffold(
       backgroundColor: SoftPalette.background,
@@ -83,6 +90,33 @@ class SurahDetailScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () => ref
+                        .read(favoritesControllerProvider.notifier)
+                        .toggleSurah(surahNumber),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: SoftPalette.surface,
+                        shape: BoxShape.circle,
+                        boxShadow: SoftPalette.softShadow(
+                          opacity: 0.05,
+                          y: 4,
+                          blur: 10,
+                        ),
+                      ),
+                      child: Icon(
+                        isFavoriteSurah ? Iconsax.star1 : Iconsax.star,
+                        color: isFavoriteSurah
+                            ? const Color(0xFFE0A83F)
+                            : SoftPalette.textSecondary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => PlayerScreen.open(
                       context,

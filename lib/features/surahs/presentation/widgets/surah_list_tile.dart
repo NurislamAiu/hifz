@@ -26,11 +26,20 @@ class SurahListTile extends StatelessWidget {
     required this.surah,
     required this.isDownloaded,
     required this.onTap,
+    required this.onDownload,
+    this.downloadProgress,
   });
 
   final Surah surah;
   final bool isDownloaded;
   final VoidCallback onTap;
+
+  /// Starts downloading the surah. Only invoked from the idle (not-downloaded)
+  /// state of the trailing control.
+  final VoidCallback onDownload;
+
+  /// Non-null while the surah is downloading — the fraction 0..1 completed.
+  final double? downloadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +47,10 @@ class SurahListTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         child: Row(
           children: [
-            _NumberSeal(number: surah.number, isDownloaded: isDownloaded),
+            _NumberSeal(number: surah.number),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -72,7 +81,7 @@ class SurahListTile extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 92),
               child: Text(
@@ -87,8 +96,74 @@ class SurahListTile extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: 4),
+            _DownloadControl(
+              isDownloaded: isDownloaded,
+              downloadProgress: downloadProgress,
+              onDownload: onDownload,
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Trailing download status/action for a surah. A full 44×44 tap target so it
+/// never fights the row's tap or clips outside its bounds.
+///
+/// - downloading → progress ring (not tappable)
+/// - downloaded  → green tick (not tappable)
+/// - idle        → tappable download button
+class _DownloadControl extends StatelessWidget {
+  const _DownloadControl({
+    required this.isDownloaded,
+    required this.onDownload,
+    this.downloadProgress,
+  });
+
+  final bool isDownloaded;
+  final VoidCallback onDownload;
+  final double? downloadProgress;
+
+  @override
+  Widget build(BuildContext context) {
+    if (downloadProgress != null) {
+      return SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              value: downloadProgress == 0 ? null : downloadProgress,
+              strokeWidth: 2.4,
+              backgroundColor: SoftPalette.track,
+              color: SoftPalette.primary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (isDownloaded) {
+      return const SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(Iconsax.tick_circle, size: 22, color: SoftPalette.primary),
+      );
+    }
+
+    return IconButton(
+      onPressed: onDownload,
+      visualDensity: VisualDensity.compact,
+      splashRadius: 22,
+      tooltip: 'Скачать',
+      icon: Icon(
+        Iconsax.import_1,
+        size: 22,
+        color: SoftPalette.textSecondary,
       ),
     );
   }
@@ -98,9 +173,8 @@ class SurahListTile extends StatelessWidget {
 /// squares rotated 45° apart, which is the classic way to draw this shape
 /// without needing a custom path/painter.
 class _NumberSeal extends StatelessWidget {
-  const _NumberSeal({required this.number, required this.isDownloaded});
+  const _NumberSeal({required this.number});
   final int number;
-  final bool isDownloaded;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +197,6 @@ class _NumberSeal extends StatelessWidget {
       width: 44,
       height: 44,
       child: Stack(
-        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           square(0),
@@ -136,26 +209,6 @@ class _NumberSeal extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          if (isDownloaded)
-            Positioned(
-              right: -4,
-              bottom: -4,
-              child: Container(
-                width: 15,
-                height: 15,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: SoftPalette.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: SoftPalette.surface, width: 1.5),
-                ),
-                child: const Icon(
-                  Iconsax.tick_circle,
-                  size: 10,
-                  color: Colors.white,
-                ),
-              ),
-            ),
         ],
       ),
     );

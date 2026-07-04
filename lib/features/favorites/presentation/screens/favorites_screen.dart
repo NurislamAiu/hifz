@@ -9,7 +9,6 @@ import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/models/favorite_item.dart';
 import '../../../../data/providers.dart';
 import '../../../player/presentation/screens/player_screen.dart';
-import '../../../surahs/presentation/screens/surah_detail_screen.dart';
 import '../../providers/favorites_provider.dart';
 
 enum _FavoritesFilter { all, surahs, ayahs }
@@ -39,21 +38,50 @@ class FavoritesScreen extends ConsumerWidget {
         favorites.where((f) => f.type == FavoriteType.ayah).toList(),
     };
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
+    return Material(
       color: SoftPalette.background,
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              padding: const EdgeInsets.fromLTRB(8, 8, 20, 4),
               sliver: SliverToBoxAdapter(
-                child: Text(
-                  s.favorites,
-                  style: AppTextStyles.displayTitle.copyWith(
-                    color: SoftPalette.textDark,
-                  ),
+                child: Row(
+                  children: [
+                    if (Navigator.of(context).canPop())
+                      InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: SoftPalette.surface,
+                            shape: BoxShape.circle,
+                            boxShadow: SoftPalette.softShadow(
+                              opacity: 0.05,
+                              y: 4,
+                              blur: 10,
+                            ),
+                          ),
+                          child: const Icon(
+                            Iconsax.arrow_left_2,
+                            size: 16,
+                            color: SoftPalette.primary,
+                          ),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    Text(
+                      s.favorites,
+                      style: AppTextStyles.displayTitle.copyWith(
+                        color: SoftPalette.textDark,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -167,19 +195,11 @@ class FavoritesScreen extends ConsumerWidget {
                           : ref
                                 .read(favoritesControllerProvider.notifier)
                                 .toggleSurah(item.surahNumber),
-                      onTap: () => isAyah
-                          ? PlayerScreen.open(
-                              context,
-                              surahNumber: item.surahNumber,
-                              startAyah: item.ayahNumberInSurah!,
-                            )
-                          : Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SurahDetailScreen(
-                                  surahNumber: item.surahNumber,
-                                ),
-                              ),
-                            ),
+                      onTap: () => PlayerScreen.open(
+                        context,
+                        surahNumber: item.surahNumber,
+                        startAyah: isAyah ? item.ayahNumberInSurah! : 1,
+                      ),
                     );
                   },
                 ),

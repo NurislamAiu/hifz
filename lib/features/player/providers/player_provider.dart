@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:just_audio_background/just_audio_background.dart';
 
+import '../../../core/app_paths.dart';
 import '../../../data/models/ayah.dart';
 import '../../../data/providers.dart';
 import '../../settings/providers/settings_provider.dart';
@@ -98,6 +100,23 @@ class PlayerViewState {
 class PlayerController extends Notifier<PlayerViewState?> {
   late final ja.AudioPlayer _player;
   Timer? _statsTicker;
+  Uri? _artUri;
+
+  /// Lock screen / notification artwork can't read `assets/` directly, so the
+  /// app logo is copied to a file once and its `file://` URI reused for every
+  /// MediaItem.
+  Future<Uri> _ensureArtUri() async {
+    final cached = _artUri;
+    if (cached != null) return cached;
+    final file = File('${AppPaths.documentsPath}/now_playing_art.png');
+    if (!await file.exists()) {
+      final data = await rootBundle.load('assets/icon.png');
+      await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+    }
+    final uri = Uri.file(file.path);
+    _artUri = uri;
+    return uri;
+  }
 
   @override
   PlayerViewState? build() {
@@ -185,6 +204,7 @@ class PlayerController extends Notifier<PlayerViewState?> {
     if (s == null) return;
     final reciter = ref.read(selectedReciterProvider);
     final audioRepo = ref.read(audioRepositoryProvider);
+    final artUri = await _ensureArtUri();
     final sources = <ja.AudioSource>[];
 
     for (final ayah in s.ayahs) {
@@ -193,30 +213,40 @@ class PlayerController extends Notifier<PlayerViewState?> {
         surahNumber: ayah.surahNumber,
         ayahNumberInSurah: ayah.numberInSurah,
       );
-      final uri = await File(localPath).exists()
-          ? Uri.file(localPath)
-          : Uri.parse(
+      final tag = MediaItem(
+        id: '${ayah.surahNumber}:${ayah.numberInSurah}',
+        album: s.surahNameTransliteration,
+        title:
+            '${s.surahNameTransliteration} ${ayah.surahNumber}:${ayah.numberInSurah}',
+        artist: reciter.name,
+        displayTitle: s.surahNameArabic,
+        displaySubtitle: 'Аят ${ayah.numberInSurah}',
+        artUri: artUri,
+      );
+
+      if (await File(localPath).exists()) {
+        // Already cached on disk — play straight from the file.
+        sources.add(ja.AudioSource.uri(Uri.file(localPath), tag: tag));
+      } else {
+        // Stream from the network while simultaneously caching to the same
+        // deterministic path AudioRepository uses. Once fully played, the file
+        // lands on disk, so repeats (and later sessions) read from disk instead
+        // of re-downloading every loop.
+        sources.add(
+          // ignore: experimental_member_use
+          ja.LockCachingAudioSource(
+            Uri.parse(
               audioRepo.remoteUrl(
                 reciterFolder: reciter.folder,
                 surahNumber: ayah.surahNumber,
                 ayahNumberInSurah: ayah.numberInSurah,
               ),
-            );
-
-      sources.add(
-        ja.AudioSource.uri(
-          uri,
-          tag: MediaItem(
-            id: '${ayah.surahNumber}:${ayah.numberInSurah}',
-            album: s.surahNameTransliteration,
-            title:
-                '${s.surahNameTransliteration} ${ayah.surahNumber}:${ayah.numberInSurah}',
-            artist: reciter.name,
-            displayTitle: s.surahNameArabic,
-            displaySubtitle: 'Аят ${ayah.numberInSurah}',
+            ),
+            cacheFile: File(localPath),
+            tag: tag,
           ),
-        ),
-      );
+        );
+      }
     }
 
     final duration = await _player.setAudioSources(
@@ -228,6 +258,15 @@ class PlayerController extends Notifier<PlayerViewState?> {
 
     if (autoplay || s.isPlaying) {
       await _player.play();
+    }
+
+    // Reconcile isPlaying with the player. When auto-advancing between surahs
+    // the player was already playing, so playingStream doesn't re-emit `true`
+    // for the freshly-loaded queue — leaving the state stuck on "paused" while
+    // audio keeps playing. Sync explicitly from the player's own flag.
+    final cur = state;
+    if (cur != null && cur.isPlaying != _player.playing) {
+      state = cur.copyWith(isPlaying: _player.playing);
     }
   }
 
@@ -244,6 +283,14 @@ class PlayerController extends Notifier<PlayerViewState?> {
         s.loop.repeatsSurah &&
         s.currentIndex == s.ayahs.length - 1 &&
         index == 0;
+
+    // Only honour natural forward advancement or a surah-loop wrap. User jumps
+    // (next/previous/jumpToAyah) already set currentIndex before seeking, so
+    // their emissions match currentIndex and returned above. Any other index is
+    // a stale emission from the previous queue — arriving right after the next
+    // surah is loaded — and must be ignored, otherwise the new surah jumps to
+    // the position the previous one ended on (e.g. starting Al-Baqarah at 7).
+    if (index != s.currentIndex + 1 && !wrappedSurah) return;
 
     if (index == s.currentIndex + 1 && s.loop.repeatsAyah) {
       if (s.loop.infinite || s.repeatsRemaining > 1) {
@@ -330,6 +377,14 @@ class PlayerController extends Notifier<PlayerViewState?> {
         state = s.copyWith(currentIndex: 0, position: Duration.zero);
         await _seekToIndex(0);
         await _player.play();
+        return;
+      }
+      // End of the surah with no active loop — continue with the next surah for
+      // uninterrupted playback, or stop after the last one.
+      final quranRepo = ref.read(quranRepositoryProvider);
+      final total = quranRepo.getSurahs().length;
+      if (s.surahNumber < total) {
+        await loadSurah(s.surahNumber + 1);
         return;
       }
       await _player.pause();

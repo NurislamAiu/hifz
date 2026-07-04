@@ -50,6 +50,7 @@ abstract final class AppConstants {
   static const String hiveBoxRecent = 'recent_box';
   static const String hiveBoxLocation = 'location_box';
   static const String hiveBoxStats = 'stats_box';
+  static const String hiveBoxZikrStats = 'zikr_stats_box';
   static const String hiveBoxPrayerScheduleCache = 'prayer_schedule_cache_box';
 
   static const List<ReciterInfo> reciters = [

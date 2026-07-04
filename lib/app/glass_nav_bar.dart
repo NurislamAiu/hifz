@@ -24,7 +24,7 @@ class GlassNavBar extends StatelessWidget {
       (icon: Iconsax.home_2, label: s.navHome),
       (icon: Iconsax.chart_2, label: s.navStats),
       (icon: FlutterIslamicIcons.quran, label: s.navReciters),
-      (icon: Iconsax.star, label: s.navFavorites),
+      (icon: FlutterIslamicIcons.tasbih, label: s.navZikr),
       (icon: Iconsax.setting_2, label: s.navSettings),
     ];
 

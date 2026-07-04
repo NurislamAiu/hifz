@@ -35,7 +35,18 @@ class AppStrings {
   String get navStats => isKk ? 'Статистика' : 'Статистика';
   String get navReciters => isKk ? 'Қарилар' : 'Чтецы';
   String get navFavorites => isKk ? 'Таңдаулы' : 'Избранное';
+  String get navZikr => isKk ? 'Зікір' : 'Зикры';
   String get navSettings => isKk ? 'Баптаулар' : 'Настройки';
+
+  String get zikrTitle => isKk ? 'Зікірлер' : 'Зикры';
+  String get zikrSubtitle => isKk ? 'Күнделікті тәсбих' : 'Ежедневный тасбих';
+  String get zikrReset => isKk ? 'Қайта бастау' : 'Сбросить';
+  String get zikrToday => isKk ? 'Бүгін' : 'Сегодня';
+  String get zikrStreakDays => isKk ? 'Күн қатарынан' : 'Дней подряд';
+
+  List<String> get weekdayShort => isKk
+      ? const ['Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сб', 'Жс']
+      : const ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
   String get onboardingListenTitle =>
       isKk ? 'Құран тыңдаңыз' : 'Слушайте Коран';

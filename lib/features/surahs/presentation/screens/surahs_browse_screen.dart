@@ -10,6 +10,7 @@ import '../../../../core/theme/soft_palette.dart';
 import '../../../../data/providers.dart';
 import '../../../player/presentation/screens/player_screen.dart';
 import '../../../settings/providers/settings_provider.dart';
+import '../../providers/surah_download_provider.dart';
 import '../../providers/surahs_provider.dart';
 import '../widgets/surah_list_tile.dart';
 import 'surah_detail_screen.dart';
@@ -159,6 +160,11 @@ class _SurahsBrowseScreenState extends ConsumerState<SurahsBrowseScreen> {
                     Divider(height: 1, color: SoftPalette.track),
                 itemBuilder: (context, i) {
                   final surah = surahs[i];
+                  final downloadProgress = ref.watch(
+                    surahDownloadControllerProvider.select(
+                      (m) => m[surah.number],
+                    ),
+                  );
                   final isDownloaded = ref
                       .watch(audioRepositoryProvider)
                       .isSurahDownloaded(
@@ -169,6 +175,10 @@ class _SurahsBrowseScreenState extends ConsumerState<SurahsBrowseScreen> {
                   return SurahListTile(
                     surah: surah,
                     isDownloaded: isDownloaded,
+                    downloadProgress: downloadProgress,
+                    onDownload: () => ref
+                        .read(surahDownloadControllerProvider.notifier)
+                        .download(surah.number),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) =>

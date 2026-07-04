@@ -16,6 +16,17 @@ class NotificationRepository {
   bool _pluginInitialized = false;
   static const _prayerNotificationStartId = 100;
   static const _prayerNotificationCount = 10;
+
+  /// Stable notification id offset per prayer. Keyed by prayer so re-scheduling
+  /// always overwrites the same id instead of shifting ids as prayers pass —
+  /// which previously let overlapping re-schedules leave duplicate reminders.
+  static const _prayerIdOffsets = <String, int>{
+    'fajr': 0,
+    'dhuhr': 1,
+    'asr': 2,
+    'maghrib': 3,
+    'isha': 4,
+  };
   static const _repentanceNotificationStartId = 1000;
   static const _repentanceNotificationCount = 6;
   static const _repentanceWindowStartHour = 8;
@@ -329,14 +340,14 @@ class NotificationRepository {
     await cancelPrayerNotifications();
 
     final now = DateTime.now();
-    var id = _prayerNotificationStartId;
     for (final entry in prayerTimes.entries) {
-      if (entry.key == 'sunrise') continue;
+      final offset = _prayerIdOffsets[entry.key];
+      if (offset == null) continue; // e.g. sunrise — not a reminder
       if (disabledKeys.contains(entry.key)) continue;
       if (!entry.time.isAfter(now)) continue;
 
       await _plugin.zonedSchedule(
-        id: id++,
+        id: _prayerNotificationStartId + offset,
         title: _prayerName(entry.key, language),
         body: language == AppLanguage.kk
             ? '${_prayerName(entry.key, language)} намазының уақыты кірді'
@@ -368,9 +379,12 @@ class NotificationRepository {
         now.year * 10000 + now.month * 100 + now.day + tone.index * 100000;
     final random = Random(seed);
     final scheduledTimes = _randomReminderTimes(now, random);
+    // Pick distinct verses (shuffled) so the same reminder isn't delivered
+    // several times in one day; only repeats if there are more slots than verses.
+    final pool = List.of(reminders)..shuffle(random);
 
     for (var i = 0; i < scheduledTimes.length; i++) {
-      final reminder = reminders[random.nextInt(reminders.length)];
+      final reminder = pool[i % pool.length];
       await _plugin.zonedSchedule(
         id: _repentanceNotificationStartId + i,
         title: language == AppLanguage.kk

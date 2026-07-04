@@ -29,6 +29,10 @@ abstract final class HiveBoxes {
   /// Seconds listened per day, keyed `"yyyy-MM-dd"`.
   static late Box<int> stats;
 
+  /// Dhikr counts, keyed `"z:<transliteration>:yyyy-MM-dd"` — one entry per
+  /// zikr per day. The day's total is the sum of that day's entries.
+  static late Box<int> zikrStats;
+
   /// Monthly AlAdhan schedules encoded as JSON strings.
   static late Box<String> prayerScheduleCache;
 
@@ -44,6 +48,7 @@ abstract final class HiveBoxes {
     recent = await Hive.openBox<String>(AppConstants.hiveBoxRecent);
     location = await Hive.openBox<double>(AppConstants.hiveBoxLocation);
     stats = await Hive.openBox<int>(AppConstants.hiveBoxStats);
+    zikrStats = await Hive.openBox<int>(AppConstants.hiveBoxZikrStats);
     prayerScheduleCache = await Hive.openBox<String>(
       AppConstants.hiveBoxPrayerScheduleCache,
     );

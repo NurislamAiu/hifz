@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/prayer_city.dart';
+import '../../../favorites/presentation/screens/favorites_screen.dart';
 import '../../providers/prayer_times_provider.dart';
 import '../../../settings/providers/settings_provider.dart';
 import '../../../../core/theme/soft_palette.dart';
@@ -58,6 +59,14 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
+                  _FavoritesButton(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const FavoritesScreen(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   _CityButton(
                     label: selectedCity?.localizedName(s.language) ?? s.geo,
                     onTap: () => _showCityPicker(context, ref, selectedCityId),
@@ -153,6 +162,31 @@ class HomeScreen extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _FavoritesButton extends StatelessWidget {
+  const _FavoritesButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: SoftPalette.surface,
+          shape: BoxShape.circle,
+          boxShadow: SoftPalette.softShadow(opacity: 0.05, y: 4, blur: 10),
+        ),
+        child: const Icon(Iconsax.star, color: SoftPalette.primary, size: 20),
+      ),
     );
   }
 }
