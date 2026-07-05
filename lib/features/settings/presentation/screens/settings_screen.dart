@@ -90,6 +90,10 @@ class SettingsScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 22),
+            _SectionLabel(s.widgetSection),
+            const _SettingsCard(child: _WidgetQuizRow()),
+
+            const SizedBox(height: 22),
             _SectionLabel(s.storageSection),
             const _SettingsCard(child: _CacheManagementRow()),
 
@@ -687,6 +691,128 @@ class _ReminderToneSwitcher extends StatelessWidget {
           chip(context.s.gentle, RepentanceReminderTone.gentle),
           const SizedBox(width: 4),
           chip(context.s.firm, RepentanceReminderTone.firm),
+        ],
+      ),
+    );
+  }
+}
+
+class _WidgetQuizRow extends ConsumerWidget {
+  const _WidgetQuizRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latin = ref.watch(
+      settingsControllerProvider.select((s) => s.widgetQuizNameLatin),
+    );
+    final s = context.s;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: SoftPalette.primary.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.widgets_rounded,
+                  color: SoftPalette.primary,
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.widgetQuizName,
+                      style: AppTextStyles.body.copyWith(
+                        color: SoftPalette.textDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s.widgetQuizNameSubtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        color: SoftPalette.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _WidgetNameModeSwitcher(
+            latin: latin,
+            onChanged: (value) => ref
+                .read(settingsControllerProvider.notifier)
+                .setWidgetQuizLatin(value),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WidgetNameModeSwitcher extends StatelessWidget {
+  const _WidgetNameModeSwitcher({
+    required this.latin,
+    required this.onChanged,
+  });
+
+  final bool latin;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(String label, bool value) {
+      final selected = latin == value;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(value),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: BoxDecoration(
+              color: selected ? SoftPalette.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: selected ? Colors.white : SoftPalette.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SoftPalette.light,
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: Row(
+        children: [
+          chip(context.s.widgetArabic, false),
+          const SizedBox(width: 4),
+          chip(context.s.widgetLatin, true),
         ],
       ),
     );

@@ -90,6 +90,13 @@ class AppSettings {
   @HiveField(20)
   final String? appLanguageCode;
 
+  // Whether the home-screen quiz widget shows names in Latin (true) or Arabic
+  // (false/null — the default).
+  @HiveField(21)
+  final bool? widgetQuizLatin;
+
+  bool get widgetQuizNameLatin => widgetQuizLatin ?? false;
+
   RepentanceReminderTone get repentanceReminderTone =>
       RepentanceReminderTone.fromStorageName(repentanceReminderToneName);
 
@@ -147,6 +154,7 @@ class AppSettings {
     this.ishaNotificationEnabled,
     this.repentanceReminderToneName,
     this.appLanguageCode,
+    this.widgetQuizLatin,
   });
 
   AppSettings copyWith({
@@ -171,6 +179,7 @@ class AppSettings {
     bool? ishaNotificationEnabled,
     RepentanceReminderTone? repentanceReminderTone,
     String? appLanguageCode,
+    bool? widgetQuizLatin,
   }) => AppSettings(
     reciterId: reciterId ?? this.reciterId,
     displayMode: displayMode ?? this.displayMode,
@@ -206,6 +215,7 @@ class AppSettings {
     repentanceReminderToneName:
         repentanceReminderTone?.storageName ?? repentanceReminderToneName,
     appLanguageCode: appLanguageCode ?? this.appLanguageCode,
+    widgetQuizLatin: widgetQuizLatin ?? this.widgetQuizLatin,
   );
 }
 

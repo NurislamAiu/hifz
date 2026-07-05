@@ -29,7 +29,7 @@ class GlassNavBar extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: SoftPalette.surface,
         borderRadius: BorderRadius.circular(30),
@@ -80,7 +80,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 16 : 12,
+          horizontal: selected ? 14 : 10,
           vertical: 11,
         ),
         decoration: BoxDecoration(
@@ -117,11 +117,13 @@ class _NavItem extends StatelessWidget {
               curve: Curves.easeOutCubic,
               child: selected
                   ? Padding(
-                      padding: const EdgeInsets.only(left: 7),
+                      padding: const EdgeInsets.only(left: 6),
                       child: Text(
                         item.label,
+                        maxLines: 1,
+                        softWrap: false,
                         style: AppTextStyles.caption.copyWith(
-                          fontSize: 12.5,
+                          fontSize: 12,
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
                         ),

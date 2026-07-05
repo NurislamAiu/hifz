@@ -31,6 +31,10 @@ class AppStrings {
 
   String get appTitle => 'Hifz';
 
+  String get splashBismillahTranslit => isKk ? 'Бисмилләһ' : 'Бисмиллях';
+  String get splashBismillahMeaning =>
+      isKk ? 'Алланың атымен' : 'Именем Аллаха';
+
   String get navHome => isKk ? 'Басты' : 'Главная';
   String get navStats => isKk ? 'Статистика' : 'Статистика';
   String get navReciters => isKk ? 'Қарилар' : 'Чтецы';
@@ -43,6 +47,44 @@ class AppStrings {
   String get zikrReset => isKk ? 'Қайта бастау' : 'Сбросить';
   String get zikrToday => isKk ? 'Бүгін' : 'Сегодня';
   String get zikrStreakDays => isKk ? 'Күн қатарынан' : 'Дней подряд';
+
+  String get zikrSpeakHint => isKk
+      ? 'Түймені басып ұстап, зікірді айтыңыз'
+      : 'Удерживайте кнопку и произносите зикр';
+  String get zikrListening => isKk ? 'Тыңдап тұрмын…' : 'Слушаю…';
+  String get zikrRecognized => isKk ? 'Дұрыс, есептелді' : 'Верно, засчитано';
+  String get zikrTryAgain =>
+      isKk ? 'Танылмады, қайталап көріңіз' : 'Не распозналось, попробуйте ещё';
+  String get zikrMicDenied =>
+      isKk ? 'Микрофонға рұқсат жоқ' : 'Нет доступа к микрофону';
+
+  String get namesGameTitle => isKk ? 'Алла есімдері' : 'Имена Аллаха';
+  String get namesGameSubtitle => isKk ? 'Жұбын тап' : 'Найди пару';
+  String get namesMemorySubtitle => isKk ? 'Мемори' : 'Мемори (карточки)';
+  String get namesGameModeLatin => isKk ? 'Латын' : 'Латиница';
+  String get namesGameModeArabic => isKk ? 'Араб' : 'Арабский';
+  String get namesGameMoves => isKk ? 'Қадам' : 'Ходы';
+  String get namesGamePairs => isKk ? 'Жұп' : 'Пары';
+  String get namesGameRestart => isKk ? 'Қайта' : 'Заново';
+  String get namesGameWinTitle =>
+      isKk ? 'Жарайсың!' : 'Молодец!';
+  String get namesGameWinSubtitle => isKk
+      ? 'Барлық жұп табылды'
+      : 'Все пары найдены';
+  String get namesGamePlayAgain => isKk ? 'Қайта ойнау' : 'Играть снова';
+  String get namesGameRounds => isKk ? 'Ойын' : 'Игр';
+  String get namesGameBest => isKk ? 'Рекорд' : 'Рекорд';
+  String get namesGameRoundDone => isKk ? 'Раунд өтті!' : 'Раунд пройден!';
+  String get namesGameMemoryOpen => isKk ? 'Мемори' : 'Мемори';
+  String get namesQuizSubtitle => isKk ? 'Біліміңді сына' : 'Проверь знания';
+  String get namesGameChoose => isKk ? 'Ойын таңда' : 'Выбери игру';
+  String get namesTitleQuiz => isKk ? 'Викторина' : 'Викторина';
+  String get namesTitlePairs => isKk ? 'Жұптар' : 'Пары';
+  String get namesTitleMemory => isKk ? 'Мемори' : 'Мемори';
+  String get namesQuizPrompt =>
+      isKk ? 'Бұл есім нені білдіреді?' : 'Что означает это имя?';
+  String get namesGameScore => isKk ? 'Ұпай' : 'Счёт';
+  String get namesGameStreak => isKk ? 'Серия' : 'Серия';
 
   List<String> get weekdayShort => isKk
       ? const ['Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сб', 'Жс']
@@ -212,6 +254,14 @@ class AppStrings {
   String get readingSection => isKk ? 'ОҚУ' : 'ЧТЕНИЕ';
   String get notificationsSection => isKk ? 'ХАБАРЛАМАЛАР' : 'УВЕДОМЛЕНИЯ';
   String get storageSection => isKk ? 'САҚТАУ ОРНЫ' : 'ХРАНИЛИЩЕ';
+  String get widgetSection => isKk ? 'ВИДЖЕТ' : 'ВИДЖЕТ';
+  String get widgetQuizName =>
+      isKk ? 'Виджеттегі есім' : 'Имя в виджете';
+  String get widgetQuizNameSubtitle => isKk
+      ? 'Ойын виджетінде есім қалай көрінеді'
+      : 'Как показывать имя в игре-виджете';
+  String get widgetLatin => isKk ? 'Латын' : 'Латиница';
+  String get widgetArabic => isKk ? 'Араб' : 'Арабский';
   String get supportSection => isKk ? 'ЖОБАНЫ ҚОЛДАУ' : 'ПОДДЕРЖКА ПРОЕКТА';
   String get aboutSection => isKk ? 'ҚОЛДАНБА ТУРАЛЫ' : 'О ПРИЛОЖЕНИИ';
   String get appLanguage => isKk ? 'Қолданба тілі' : 'Язык приложения';

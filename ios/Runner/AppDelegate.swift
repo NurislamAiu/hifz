@@ -18,12 +18,16 @@ import WidgetKit
         binaryMessenger: registrar.messenger()
       )
       channel.setMethodCallHandler { [weak self] call, result in
-        guard call.method == "savePrayerTimes" else {
+        switch call.method {
+        case "savePrayerTimes":
+          self?.savePrayerTimesForWidget(call.arguments)
+          result(nil)
+        case "setWidgetQuizMode":
+          self?.saveQuizModeForWidget(call.arguments)
+          result(nil)
+        default:
           result(FlutterMethodNotImplemented)
-          return
         }
-        self?.savePrayerTimesForWidget(call.arguments)
-        result(nil)
       }
     }
     return result
@@ -45,6 +49,21 @@ import WidgetKit
 
     if #available(iOS 14.0, *) {
       WidgetCenter.shared.reloadTimelines(ofKind: "HifzReminderWidget")
+    }
+  }
+
+  private func saveQuizModeForWidget(_ arguments: Any?) {
+    guard let payload = arguments as? [String: Any],
+          let mode = payload["mode"] as? String,
+          let defaults = UserDefaults(suiteName: appGroupId) else {
+      return
+    }
+
+    defaults.set(mode, forKey: "quiz_name_mode")
+    defaults.synchronize()
+
+    if #available(iOS 14.0, *) {
+      WidgetCenter.shared.reloadTimelines(ofKind: "HifzNamesQuizWidget")
     }
   }
 }

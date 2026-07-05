@@ -4,6 +4,7 @@ import 'repositories/audio_repository.dart';
 import 'repositories/favorites_repository.dart';
 import 'repositories/listening_stats_repository.dart';
 import 'repositories/location_repository.dart';
+import 'repositories/names_game_stats_repository.dart';
 import 'repositories/notification_repository.dart';
 import 'repositories/official_prayer_times_repository.dart';
 import 'repositories/prayer_times_repository.dart';
@@ -55,6 +56,10 @@ final officialPrayerTimesRepositoryProvider =
 
 final listeningStatsRepositoryProvider = Provider<ListeningStatsRepository>(
   (ref) => ListeningStatsRepository(),
+);
+
+final namesGameStatsRepositoryProvider = Provider<NamesGameStatsRepository>(
+  (ref) => NamesGameStatsRepository(),
 );
 
 final zikrStatsRepositoryProvider = Provider<ZikrStatsRepository>(

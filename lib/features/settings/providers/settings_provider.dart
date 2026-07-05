@@ -8,7 +8,17 @@ import '../../../data/providers.dart';
 
 class SettingsController extends Notifier<AppSettings> {
   @override
-  AppSettings build() => ref.read(settingsRepositoryProvider).get();
+  AppSettings build() {
+    final settings = ref.read(settingsRepositoryProvider).get();
+    // Push the current quiz-widget name mode to the App Group so the widget
+    // reflects it on launch, even if the user never toggles it this session.
+    Future.microtask(
+      () => ref
+          .read(widgetSyncRepositoryProvider)
+          .saveQuizNameMode(latin: settings.widgetQuizNameLatin),
+    );
+    return settings;
+  }
 
   Future<void> _persist(AppSettings next) async {
     state = next;
@@ -59,6 +69,13 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> setAppLanguageCode(String languageCode) =>
       _persist(state.copyWith(appLanguageCode: languageCode));
+
+  Future<void> setWidgetQuizLatin(bool latin) async {
+    await _persist(state.copyWith(widgetQuizLatin: latin));
+    await ref
+        .read(widgetSyncRepositoryProvider)
+        .saveQuizNameMode(latin: latin);
+  }
 
   Future<void> setPrayerNotificationEnabled(String key, bool enabled) {
     return switch (key) {

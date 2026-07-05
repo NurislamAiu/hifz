@@ -8,6 +8,7 @@ import '../core/theme/app_theme.dart';
 import '../features/desktop/presentation/mac_desktop_shell.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/settings/providers/settings_provider.dart';
+import '../features/splash/presentation/screens/splash_screen.dart';
 import 'root_shell.dart';
 
 class QuranMemoApp extends ConsumerWidget {
@@ -15,11 +16,6 @@ class QuranMemoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasCompletedOnboarding = ref.watch(
-      settingsControllerProvider.select(
-        (s) => s.hasCompletedOnboarding ?? false,
-      ),
-    );
     final language = ref.watch(
       settingsControllerProvider.select(
         (settings) => AppLanguage.fromCode(settings.appLanguageCode),
@@ -39,13 +35,52 @@ class QuranMemoApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      // macOS desktop gets a dedicated surah-list + player UI; mobile is
-      // unchanged.
-      home: isMacDesktop
-          ? const MacDesktopShell()
-          : hasCompletedOnboarding
-          ? const RootShell()
-          : const OnboardingScreen(),
+      home: const _SplashGate(),
+    );
+  }
+}
+
+/// Shows the animated [SplashScreen] on launch, then cross-fades into the real
+/// entry point once the intro has played.
+class _SplashGate extends ConsumerStatefulWidget {
+  const _SplashGate();
+
+  @override
+  ConsumerState<_SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends ConsumerState<_SplashGate> {
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 2600), () {
+      if (mounted) setState(() => _ready = true);
+    });
+  }
+
+  Widget _destination() {
+    if (isMacDesktop) return const MacDesktopShell();
+    final hasCompletedOnboarding = ref.watch(
+      settingsControllerProvider.select(
+        (s) => s.hasCompletedOnboarding ?? false,
+      ),
+    );
+    return hasCompletedOnboarding
+        ? const RootShell()
+        : const OnboardingScreen();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 700),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: _ready
+          ? _destination()
+          : const SplashScreen(key: ValueKey('splash')),
     );
   }
 }

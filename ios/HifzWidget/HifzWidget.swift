@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import AppIntents
 
 struct ReminderText {
     let reference: String
@@ -1479,11 +1480,611 @@ struct HifzAyahLockRectangularView: View {
     }
 }
 
+// MARK: - Names of Allah quiz (interactive medium widget)
+
+struct QuizName {
+    let arabic: String
+    let translit: String
+    let ru: String
+    let kk: String
+}
+
+let quizNames: [QuizName] = [
+    QuizName(arabic: "الرَّحْمَٰن", translit: "Ar-Rahman", ru: "Милостивый", kk: "Аса Мейірімді"),
+    QuizName(arabic: "الرَّحِيم", translit: "Ar-Rahim", ru: "Милосердный", kk: "Ерекше Мейірімді"),
+    QuizName(arabic: "الْمَلِك", translit: "Al-Malik", ru: "Владыка", kk: "Патша"),
+    QuizName(arabic: "الْقُدُّوس", translit: "Al-Quddus", ru: "Пресвятой", kk: "Пәк"),
+    QuizName(arabic: "السَّلَام", translit: "As-Salam", ru: "Источник мира", kk: "Бейбітшілік иесі"),
+    QuizName(arabic: "الْعَزِيز", translit: "Al-Aziz", ru: "Всемогущий", kk: "Үстем"),
+    QuizName(arabic: "الْخَالِق", translit: "Al-Khaliq", ru: "Творец", kk: "Жаратушы"),
+    QuizName(arabic: "الْغَفَّار", translit: "Al-Ghaffar", ru: "Всепрощающий", kk: "Кешіруші"),
+    QuizName(arabic: "الرَّزَّاق", translit: "Ar-Razzaq", ru: "Наделяющий уделом", kk: "Ризық беруші"),
+    QuizName(arabic: "الْعَلِيم", translit: "Al-Alim", ru: "Всезнающий", kk: "Барлығын Білуші"),
+    QuizName(arabic: "السَّمِيع", translit: "As-Sami", ru: "Всеслышащий", kk: "Барлығын Естуші"),
+    QuizName(arabic: "الْبَصِير", translit: "Al-Basir", ru: "Всевидящий", kk: "Барлығын Көруші"),
+    QuizName(arabic: "الْحَكِيم", translit: "Al-Hakim", ru: "Мудрый", kk: "Даналық Иесі"),
+    QuizName(arabic: "الْكَرِيم", translit: "Al-Karim", ru: "Щедрый", kk: "Жомарт"),
+    QuizName(arabic: "الْغَفُور", translit: "Al-Ghafur", ru: "Прощающий", kk: "Жарылқаушы"),
+    QuizName(arabic: "الْوَدُود", translit: "Al-Wadud", ru: "Любящий", kk: "Сүюші"),
+    QuizName(arabic: "الْحَيّ", translit: "Al-Hayy", ru: "Живой", kk: "Мәңгі Тірі"),
+    QuizName(arabic: "الْقَيُّوم", translit: "Al-Qayyum", ru: "Самодостаточный", kk: "Мәңгі Тұрушы"),
+    QuizName(arabic: "الْوَكِيل", translit: "Al-Wakil", ru: "Попечитель", kk: "Қорғаушы"),
+    QuizName(arabic: "الْحَمِيد", translit: "Al-Hamid", ru: "Достохвальный", kk: "Мадаққа Ие"),
+    QuizName(arabic: "الْحَلِيم", translit: "Al-Halim", ru: "Кроткий", kk: "Ұстамды"),
+    QuizName(arabic: "النُّور", translit: "An-Nur", ru: "Свет", kk: "Нұр"),
+    QuizName(arabic: "الصَّبُور", translit: "As-Sabur", ru: "Терпеливый", kk: "Шыдамды"),
+    QuizName(arabic: "الْهَادِي", translit: "Al-Hadi", ru: "Ведущий верным путём", kk: "Тура жолға Салушы")
+]
+
+struct QuizState {
+    var correct: Int
+    var options: [Int]
+    var answered: Bool
+    var selected: Int
+    var score: Int
+    var streak: Int
+}
+
+enum QuizStore {
+    static let suiteName = "group.com.nurislam.hifz"
+    private static var defaults: UserDefaults? { UserDefaults(suiteName: suiteName) }
+
+    static func newQuestion(score: Int, streak: Int) -> QuizState {
+        let correct = Int.random(in: 0..<quizNames.count)
+        var picks: Set<Int> = [correct]
+        while picks.count < min(3, quizNames.count) {
+            picks.insert(Int.random(in: 0..<quizNames.count))
+        }
+        var options = Array(picks)
+        options.shuffle()
+        return QuizState(
+            correct: correct,
+            options: options,
+            answered: false,
+            selected: -1,
+            score: score,
+            streak: streak
+        )
+    }
+
+    static func load() -> QuizState {
+        guard let d = defaults,
+              let options = d.array(forKey: "quiz_options") as? [Int],
+              d.object(forKey: "quiz_correct") != nil,
+              !options.isEmpty else {
+            let fresh = newQuestion(score: 0, streak: 0)
+            save(fresh)
+            return fresh
+        }
+        return QuizState(
+            correct: d.integer(forKey: "quiz_correct"),
+            options: options,
+            answered: d.bool(forKey: "quiz_answered"),
+            selected: d.object(forKey: "quiz_selected") != nil ? d.integer(forKey: "quiz_selected") : -1,
+            score: d.integer(forKey: "quiz_score"),
+            streak: d.integer(forKey: "quiz_streak")
+        )
+    }
+
+    /// "latin" or "arabic" (default) — chosen in the app's settings.
+    static func nameIsLatin() -> Bool {
+        defaults?.string(forKey: "quiz_name_mode") == "latin"
+    }
+
+    static func save(_ state: QuizState) {
+        guard let d = defaults else { return }
+        d.set(state.correct, forKey: "quiz_correct")
+        d.set(state.options, forKey: "quiz_options")
+        d.set(state.answered, forKey: "quiz_answered")
+        d.set(state.selected, forKey: "quiz_selected")
+        d.set(state.score, forKey: "quiz_score")
+        d.set(state.streak, forKey: "quiz_streak")
+    }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct AnswerQuizIntent: AppIntent {
+    static var title: LocalizedStringResource = "Ответить"
+
+    @Parameter(title: "choice")
+    var choice: Int
+
+    init() {}
+    init(choice: Int) { self.choice = choice }
+
+    func perform() async throws -> some IntentResult {
+        var state = QuizStore.load()
+        if !state.answered {
+            state.selected = choice
+            state.answered = true
+            if choice == state.correct {
+                state.score += 1
+                state.streak += 1
+            } else {
+                state.streak = 0
+            }
+            QuizStore.save(state)
+        }
+        return .result()
+    }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct NextQuizIntent: AppIntent {
+    static var title: LocalizedStringResource = "Следующий"
+
+    func perform() async throws -> some IntentResult {
+        let state = QuizStore.load()
+        QuizStore.save(QuizStore.newQuestion(score: state.score, streak: state.streak))
+        return .result()
+    }
+}
+
+struct QuizEntry: TimelineEntry {
+    let date: Date
+    let state: QuizState
+}
+
+struct NamesQuizProvider: TimelineProvider {
+    func placeholder(in context: Context) -> QuizEntry {
+        QuizEntry(date: Date(), state: QuizStore.newQuestion(score: 0, streak: 0))
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (QuizEntry) -> Void) {
+        completion(QuizEntry(date: Date(), state: QuizStore.load()))
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<QuizEntry>) -> Void) {
+        // State only changes through the answer/next intents, which reload the
+        // widget automatically — so a single, non-expiring entry is enough.
+        let entry = QuizEntry(date: Date(), state: QuizStore.load())
+        completion(Timeline(entries: [entry], policy: .never))
+    }
+}
+
+private enum QuizOptState { case idle, correct, wrong, dim }
+
+struct NamesQuizMediumView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let entry: QuizEntry
+
+    private var isKazakh: Bool { Locale.current.languageCode != "ru" }
+    private var latin: Bool { QuizStore.nameIsLatin() }
+    private var state: QuizState { entry.state }
+
+    private var accent: Color { Color(red: 0.08, green: 0.60, blue: 0.65) }
+    private var accentDark: Color { Color(red: 0.05, green: 0.48, blue: 0.53) }
+    private var isDark: Bool { colorScheme == .dark }
+    private var primaryText: Color {
+        isDark ? .white : Color(red: 0.06, green: 0.08, blue: 0.09)
+    }
+    private var secondaryText: Color {
+        isDark ? .white.opacity(0.66) : Color(red: 0.40, green: 0.47, blue: 0.49)
+    }
+    private let green = Color(red: 0.09, green: 0.65, blue: 0.48)
+    private let red = Color(red: 0.88, green: 0.33, blue: 0.31)
+
+    private func meaning(_ i: Int) -> String { isKazakh ? quizNames[i].kk : quizNames[i].ru }
+    private var caption: String { isKazakh ? "Есім нені білдіреді?" : "Что означает имя?" }
+
+    private let letters = ["А", "Б", "В", "Г"]
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: isDark
+                    ? [Color(red: 0.06, green: 0.09, blue: 0.10), Color(red: 0.03, green: 0.05, blue: 0.06)]
+                    : [Color(red: 0.95, green: 0.99, blue: 0.99), Color(red: 0.88, green: 0.96, blue: 0.97)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Soft decorative circles for depth.
+            Circle()
+                .fill(accent.opacity(isDark ? 0.14 : 0.10))
+                .frame(width: 150, height: 150)
+                .offset(x: 150, y: -92)
+            Circle()
+                .stroke(accent.opacity(isDark ? 0.12 : 0.09), lineWidth: 14)
+                .frame(width: 120, height: 120)
+                .offset(x: -130, y: 96)
+
+            VStack(spacing: 7) {
+                header
+                VStack(spacing: 5) {
+                    ForEach(Array(state.options.enumerated()), id: \.offset) { pos, id in
+                        optionRow(pos: pos, id: id)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+        }
+    }
+
+    private var header: some View {
+        HStack(alignment: .center, spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [accent, accentDark],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 40, height: 40)
+                    .shadow(color: accent.opacity(0.35), radius: 5, x: 0, y: 3)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(.white)
+            }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(caption.uppercased())
+                    .font(.system(size: 9, weight: .heavy))
+                    .foregroundColor(secondaryText)
+                    .tracking(0.6)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(latin ? quizNames[state.correct].translit : quizNames[state.correct].arabic)
+                    .font(.system(size: latin ? 20 : 24, weight: latin ? .heavy : .bold))
+                    .foregroundColor(accentDark)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+            }
+
+            Spacer(minLength: 4)
+
+            VStack(spacing: 5) {
+                pill(icon: "checkmark.seal.fill", value: "\(state.score)", tint: green)
+                pill(icon: "flame.fill", value: "\(state.streak)", tint: Color(red: 0.93, green: 0.62, blue: 0.18))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func optionRow(pos: Int, id: Int) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            if state.answered {
+                Button(intent: NextQuizIntent()) { optionLabel(pos: pos, id: id) }
+                    .buttonStyle(.plain)
+            } else {
+                Button(intent: AnswerQuizIntent(choice: id)) { optionLabel(pos: pos, id: id) }
+                    .buttonStyle(.plain)
+            }
+        } else {
+            optionLabel(pos: pos, id: id)
+        }
+    }
+
+    private func optionState(_ id: Int) -> QuizOptState {
+        if !state.answered { return .idle }
+        if id == state.correct { return .correct }
+        if id == state.selected { return .wrong }
+        return .dim
+    }
+
+    private func optionLabel(pos: Int, id: Int) -> some View {
+        let st = optionState(id)
+        let fg: Color
+        let border: Color
+        let badgeBg: Color
+        let badgeFg: Color
+        switch st {
+        case .idle:
+            fg = primaryText
+            border = accent.opacity(isDark ? 0.24 : 0.14)
+            badgeBg = accent.opacity(isDark ? 0.24 : 0.14)
+            badgeFg = accentDark
+        case .correct:
+            fg = green
+            border = green.opacity(0.55)
+            badgeBg = green
+            badgeFg = .white
+        case .wrong:
+            fg = red
+            border = red.opacity(0.55)
+            badgeBg = red
+            badgeFg = .white
+        case .dim:
+            fg = secondaryText
+            border = Color.clear
+            badgeBg = secondaryText.opacity(0.18)
+            badgeFg = secondaryText
+        }
+
+        let fillGradient = LinearGradient(
+            colors: st == .idle
+                ? (isDark
+                    ? [Color.white.opacity(0.07), Color.white.opacity(0.03)]
+                    : [Color.white, Color(red: 0.96, green: 0.99, blue: 0.99)])
+                : [Color.clear, Color.clear],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        let fillColor: Color
+        switch st {
+        case .idle: fillColor = .clear
+        case .correct: fillColor = green.opacity(isDark ? 0.20 : 0.12)
+        case .wrong: fillColor = red.opacity(isDark ? 0.20 : 0.12)
+        case .dim: fillColor = isDark ? Color.white.opacity(0.03) : Color.white.opacity(0.45)
+        }
+
+        return HStack(spacing: 9) {
+            ZStack {
+                Circle().fill(badgeBg).frame(width: 19, height: 19)
+                if st == .correct {
+                    Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)).foregroundColor(badgeFg)
+                } else if st == .wrong {
+                    Image(systemName: "xmark").font(.system(size: 10, weight: .heavy)).foregroundColor(badgeFg)
+                } else {
+                    Text(pos < letters.count ? letters[pos] : "•")
+                        .font(.system(size: 10, weight: .heavy))
+                        .foregroundColor(badgeFg)
+                }
+            }
+            Text(meaning(id))
+                .font(.system(size: 13, weight: .heavy))
+                .foregroundColor(fg)
+                .lineLimit(1)
+                .minimumScaleFactor(0.62)
+            Spacer(minLength: 2)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(fillColor)
+                if st == .idle {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(fillGradient)
+                }
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(border, lineWidth: 1)
+        )
+    }
+
+    private func pill(icon: String, value: String, tint: Color) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(tint)
+            Text(value)
+                .font(.system(size: 11, weight: .heavy))
+                .foregroundColor(primaryText)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .frame(minWidth: 44, alignment: .leading)
+        .background(Capsule().fill(tint.opacity(isDark ? 0.22 : 0.14)))
+    }
+}
+
+struct NamesQuizLargeView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let entry: QuizEntry
+
+    private var isKazakh: Bool { Locale.current.languageCode != "ru" }
+    private var latin: Bool { QuizStore.nameIsLatin() }
+    private var state: QuizState { entry.state }
+
+    private var accent: Color { Color(red: 0.08, green: 0.60, blue: 0.65) }
+    private var accentDark: Color { Color(red: 0.05, green: 0.44, blue: 0.49) }
+    private var isDark: Bool { colorScheme == .dark }
+    private var primaryText: Color { isDark ? .white : Color(red: 0.06, green: 0.08, blue: 0.09) }
+    private var secondaryText: Color { isDark ? .white.opacity(0.66) : Color(red: 0.40, green: 0.47, blue: 0.49) }
+    private let green = Color(red: 0.09, green: 0.65, blue: 0.48)
+    private let red = Color(red: 0.88, green: 0.33, blue: 0.31)
+    private let letters = ["А", "Б", "В", "Г"]
+
+    private func meaning(_ i: Int) -> String { isKazakh ? quizNames[i].kk : quizNames[i].ru }
+    private var caption: String { isKazakh ? "Есім нені білдіреді?" : "Что означает имя?" }
+    private var heroLabel: String { isKazakh ? "АЛЛА ЕСІМІ · ОЙЫН" : "ИМЯ АЛЛАХА · ИГРА" }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: isDark
+                    ? [Color(red: 0.06, green: 0.09, blue: 0.10), Color(red: 0.03, green: 0.05, blue: 0.06)]
+                    : [Color(red: 0.95, green: 0.99, blue: 0.99), Color(red: 0.87, green: 0.96, blue: 0.97)],
+                startPoint: .top, endPoint: .bottom
+            )
+
+            VStack(spacing: 12) {
+                hero
+                VStack(spacing: 8) {
+                    ForEach(Array(state.options.enumerated()), id: \.offset) { pos, id in
+                        optionRow(pos: pos, id: id)
+                    }
+                }
+                Spacer(minLength: 0)
+                footer
+            }
+            .padding(15)
+        }
+    }
+
+    private var hero: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(LinearGradient(colors: [accent, accentDark], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .shadow(color: accent.opacity(0.35), radius: 12, x: 0, y: 8)
+
+            Circle().fill(Color.white.opacity(0.12)).frame(width: 130, height: 130).offset(x: 108, y: -46)
+            Circle().stroke(Color.white.opacity(0.12), lineWidth: 12).frame(width: 90, height: 90).offset(x: -120, y: 44)
+
+            VStack(spacing: 6) {
+                HStack {
+                    Text(heroLabel)
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(0.8)
+                        .foregroundColor(.white.opacity(0.85))
+                    Spacer()
+                    heroPill(icon: "checkmark.seal.fill", value: "\(state.score)")
+                    heroPill(icon: "flame.fill", value: "\(state.streak)")
+                }
+
+                Spacer(minLength: 0)
+
+                Text(latin ? quizNames[state.correct].translit : quizNames[state.correct].arabic)
+                    .font(.system(size: latin ? 30 : 38, weight: latin ? .heavy : .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+
+                Text(latin ? quizNames[state.correct].arabic : quizNames[state.correct].translit)
+                    .font(.system(size: latin ? 18 : 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.82))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                Spacer(minLength: 0)
+
+                Text(caption)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .padding(14)
+        }
+        .frame(height: 132)
+    }
+
+    private var footer: some View {
+        HStack(spacing: 7) {
+            Circle().fill(accent).frame(width: 7, height: 7)
+            Text("Hifz")
+                .font(.system(size: 13, weight: .heavy))
+                .foregroundColor(accentDark)
+            Spacer()
+            if state.answered {
+                Text(isKazakh ? "Келесіге басыңыз" : "Нажми для следующего")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(secondaryText)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func optionRow(pos: Int, id: Int) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            if state.answered {
+                Button(intent: NextQuizIntent()) { optionLabel(pos: pos, id: id) }.buttonStyle(.plain)
+            } else {
+                Button(intent: AnswerQuizIntent(choice: id)) { optionLabel(pos: pos, id: id) }.buttonStyle(.plain)
+            }
+        } else {
+            optionLabel(pos: pos, id: id)
+        }
+    }
+
+    private func optionState(_ id: Int) -> QuizOptState {
+        if !state.answered { return .idle }
+        if id == state.correct { return .correct }
+        if id == state.selected { return .wrong }
+        return .dim
+    }
+
+    private func optionLabel(pos: Int, id: Int) -> some View {
+        let st = optionState(id)
+        let fg: Color
+        let border: Color
+        let badgeBg: Color
+        let badgeFg: Color
+        let fillColor: Color
+        switch st {
+        case .idle:
+            fg = primaryText; border = accent.opacity(isDark ? 0.24 : 0.14)
+            badgeBg = accent.opacity(isDark ? 0.24 : 0.14); badgeFg = accentDark
+            fillColor = isDark ? Color.white.opacity(0.06) : Color.white
+        case .correct:
+            fg = green; border = green.opacity(0.55)
+            badgeBg = green; badgeFg = .white
+            fillColor = green.opacity(isDark ? 0.20 : 0.12)
+        case .wrong:
+            fg = red; border = red.opacity(0.55)
+            badgeBg = red; badgeFg = .white
+            fillColor = red.opacity(isDark ? 0.20 : 0.12)
+        case .dim:
+            fg = secondaryText; border = Color.clear
+            badgeBg = secondaryText.opacity(0.18); badgeFg = secondaryText
+            fillColor = isDark ? Color.white.opacity(0.03) : Color.white.opacity(0.5)
+        }
+
+        return HStack(spacing: 11) {
+            ZStack {
+                Circle().fill(badgeBg).frame(width: 25, height: 25)
+                if st == .correct {
+                    Image(systemName: "checkmark").font(.system(size: 12, weight: .heavy)).foregroundColor(badgeFg)
+                } else if st == .wrong {
+                    Image(systemName: "xmark").font(.system(size: 12, weight: .heavy)).foregroundColor(badgeFg)
+                } else {
+                    Text(pos < letters.count ? letters[pos] : "•")
+                        .font(.system(size: 13, weight: .heavy)).foregroundColor(badgeFg)
+                }
+            }
+            Text(meaning(id))
+                .font(.system(size: 15, weight: .heavy))
+                .foregroundColor(fg)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Spacer(minLength: 2)
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(fillColor))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(border, lineWidth: 1))
+    }
+
+    private func heroPill(icon: String, value: String) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: icon).font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+            Text(value).font(.system(size: 12, weight: .heavy)).foregroundColor(.white)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(Color.white.opacity(0.20)))
+    }
+}
+
+struct NamesQuizWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: QuizEntry
+
+    var body: some View {
+        switch family {
+        case .systemLarge:
+            NamesQuizLargeView(entry: entry)
+        default:
+            NamesQuizMediumView(entry: entry)
+        }
+    }
+}
+
+struct HifzNamesQuizWidget: Widget {
+    let kind = "HifzNamesQuizWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: NamesQuizProvider()) { entry in
+            NamesQuizWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Hifz Ойын")
+        .description("Алла есімдерін тап — виджеттегі ойын")
+        .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
+    }
+}
+
 @main
 struct HifzWidgetBundle: WidgetBundle {
     var body: some Widget {
         HifzReminderWidget()
         HifzAyahLargeWidget()
         HifzAyahMediumWidget()
+        HifzNamesQuizWidget()
     }
 }
