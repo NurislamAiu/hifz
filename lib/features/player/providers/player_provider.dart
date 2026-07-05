@@ -165,6 +165,9 @@ class PlayerController extends Notifier<PlayerViewState?> {
   }
 
   Future<void> _configureAudioSession() async {
+    // audio_session targets mobile; skip it on desktop (macOS) where just_audio
+    // manages playback directly.
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
   }

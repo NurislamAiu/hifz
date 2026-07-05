@@ -48,6 +48,10 @@ class AppStrings {
       ? const ['Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сб', 'Жс']
       : const ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
+  String get play => isKk ? 'Тыңдау' : 'Слушать';
+  String get selectAyahToPlay =>
+      isKk ? 'Тыңдау үшін аятты таңдаңыз' : 'Выберите аят для прослушивания';
+
   String get onboardingListenTitle =>
       isKk ? 'Құран тыңдаңыз' : 'Слушайте Коран';
   String get onboardingListenSubtitle => isKk

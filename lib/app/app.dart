@@ -3,7 +3,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/localization/app_strings.dart';
+import '../core/platform_info.dart';
 import '../core/theme/app_theme.dart';
+import '../features/desktop/presentation/mac_desktop_shell.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/settings/providers/settings_provider.dart';
 import 'root_shell.dart';
@@ -37,7 +39,11 @@ class QuranMemoApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      home: hasCompletedOnboarding
+      // macOS desktop gets a dedicated surah-list + player UI; mobile is
+      // unchanged.
+      home: isMacDesktop
+          ? const MacDesktopShell()
+          : hasCompletedOnboarding
           ? const RootShell()
           : const OnboardingScreen(),
     );
