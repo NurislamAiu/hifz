@@ -166,6 +166,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           prayerTimes,
           disabledKeys: settings.disabledPrayerKeys,
           language: AppLanguage.fromCode(settings.appLanguageCode),
+          azan: settings.azanNotificationSound,
         );
   }
 

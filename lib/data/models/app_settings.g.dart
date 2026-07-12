@@ -39,13 +39,14 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       repentanceReminderToneName: fields[19] as String?,
       appLanguageCode: fields[20] as String?,
       widgetQuizLatin: fields[21] as bool?,
+      azanNotificationEnabled: fields[22] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(22)
+      ..writeByte(23)
       ..writeByte(0)
       ..write(obj.reciterId)
       ..writeByte(1)
@@ -89,7 +90,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(20)
       ..write(obj.appLanguageCode)
       ..writeByte(21)
-      ..write(obj.widgetQuizLatin);
+      ..write(obj.widgetQuizLatin)
+      ..writeByte(22)
+      ..write(obj.azanNotificationEnabled);
   }
 
   @override

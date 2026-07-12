@@ -306,19 +306,42 @@ class NotificationRepository {
     return true;
   }
 
-  NotificationDetails _prayerDetailsFor(AppLanguage language) =>
-      NotificationDetails(
+  NotificationDetails _prayerDetailsFor(
+    AppLanguage language, {
+    bool azan = false,
+  }) {
+    // Android pins a channel's sound at creation time and never lets it change,
+    // so the azan variant must live on its own channel id — otherwise installs
+    // that already created `prayer_times` with the default tone would keep it.
+    if (azan) {
+      return NotificationDetails(
         android: AndroidNotificationDetails(
-          'prayer_times',
-          language == AppLanguage.kk ? 'Намаз уақыты' : 'Время намаза',
+          'prayer_times_azan',
+          language == AppLanguage.kk ? 'Намаз уақыты (азан)' : 'Время намаза (азан)',
           channelDescription: language == AppLanguage.kk
-              ? 'Намаз уақыты кіргені туралы ескертулер'
-              : 'Напоминания о наступлении времени намаза',
+              ? 'Намаз уақыты кіргені туралы азан дауысымен ескертулер'
+              : 'Напоминания о наступлении времени намаза со звуком азана',
           importance: Importance.high,
           priority: Priority.high,
+          sound: const RawResourceAndroidNotificationSound('azan'),
+          audioAttributesUsage: AudioAttributesUsage.alarm,
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(sound: 'azan.caf'),
       );
+    }
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'prayer_times',
+        language == AppLanguage.kk ? 'Намаз уақыты' : 'Время намаза',
+        channelDescription: language == AppLanguage.kk
+            ? 'Намаз уақыты кіргені туралы ескертулер'
+            : 'Напоминания о наступлении времени намаза',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(),
+    );
+  }
 
   NotificationDetails _repentanceDetailsFor(
     AppLanguage language,
@@ -356,6 +379,7 @@ class NotificationRepository {
     DailyPrayerTimes prayerTimes, {
     Set<String> disabledKeys = const {},
     AppLanguage language = AppLanguage.ru,
+    bool azan = false,
   }) async {
     await _ensureInitialized();
     await cancelPrayerNotifications();
@@ -377,7 +401,7 @@ class NotificationRepository {
         // the Location label, so this fires at the correct real-world time
         // without needing the device's IANA timezone name.
         scheduledDate: tz.TZDateTime.from(entry.time, tz.UTC),
-        notificationDetails: _prayerDetailsFor(language),
+        notificationDetails: _prayerDetailsFor(language, azan: azan),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }

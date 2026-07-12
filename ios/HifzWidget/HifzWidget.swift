@@ -2070,11 +2070,11 @@ struct HifzNamesQuizWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: NamesQuizProvider()) { entry in
-            NamesQuizWidgetView(entry: entry)
+            NamesQuizLargeView(entry: entry)
         }
         .configurationDisplayName("Hifz Ойын")
         .description("Алла есімдерін тап — виджеттегі ойын")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemLarge])
         .contentMarginsDisabled()
     }
 }

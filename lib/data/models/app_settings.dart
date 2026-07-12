@@ -95,7 +95,14 @@ class AppSettings {
   @HiveField(21)
   final bool? widgetQuizLatin;
 
+  // Play the azan as the prayer-time notification sound instead of the default
+  // system tone. Null/false = default tone (for legacy installs).
+  @HiveField(22)
+  final bool? azanNotificationEnabled;
+
   bool get widgetQuizNameLatin => widgetQuizLatin ?? false;
+
+  bool get azanNotificationSound => azanNotificationEnabled ?? false;
 
   RepentanceReminderTone get repentanceReminderTone =>
       RepentanceReminderTone.fromStorageName(repentanceReminderToneName);
@@ -155,6 +162,7 @@ class AppSettings {
     this.repentanceReminderToneName,
     this.appLanguageCode,
     this.widgetQuizLatin,
+    this.azanNotificationEnabled,
   });
 
   AppSettings copyWith({
@@ -180,6 +188,7 @@ class AppSettings {
     RepentanceReminderTone? repentanceReminderTone,
     String? appLanguageCode,
     bool? widgetQuizLatin,
+    bool? azanNotificationEnabled,
   }) => AppSettings(
     reciterId: reciterId ?? this.reciterId,
     displayMode: displayMode ?? this.displayMode,
@@ -216,6 +225,8 @@ class AppSettings {
         repentanceReminderTone?.storageName ?? repentanceReminderToneName,
     appLanguageCode: appLanguageCode ?? this.appLanguageCode,
     widgetQuizLatin: widgetQuizLatin ?? this.widgetQuizLatin,
+    azanNotificationEnabled:
+        azanNotificationEnabled ?? this.azanNotificationEnabled,
   );
 }
 

@@ -61,7 +61,7 @@ class AppStrings {
   String get namesGameTitle => isKk ? 'Алла есімдері' : 'Имена Аллаха';
   String get namesGameSubtitle => isKk ? 'Жұбын тап' : 'Найди пару';
   String get namesMemorySubtitle => isKk ? 'Мемори' : 'Мемори (карточки)';
-  String get namesGameModeLatin => isKk ? 'Латын' : 'Латиница';
+  String get namesGameModeLatin => isKk ? 'Транскрипция' : 'Транскрипция';
   String get namesGameModeArabic => isKk ? 'Араб' : 'Арабский';
   String get namesGameMoves => isKk ? 'Қадам' : 'Ходы';
   String get namesGamePairs => isKk ? 'Жұп' : 'Пары';
@@ -85,6 +85,16 @@ class AppStrings {
       isKk ? 'Бұл есім нені білдіреді?' : 'Что означает это имя?';
   String get namesGameScore => isKk ? 'Ұпай' : 'Счёт';
   String get namesGameStreak => isKk ? 'Серия' : 'Серия';
+  String get namesProgressTitle => isKk ? 'Оқу прогресі' : 'Прогресс изучения';
+  String get namesProgressMastered => isKk ? 'Үйренді' : 'Выучено';
+  String get namesProgressReview => isKk ? 'Қайталау' : 'Повторить';
+  String get namesProgressNew => isKk ? 'Жаңа' : 'Новые';
+  String get namesProgressNext => isKk ? 'Келесі есімдер' : 'Что повторить';
+  String get namesProgressAllClear =>
+      isKk ? 'Бәрі жақсы, жаңа есімдерді аш' : 'Можно открывать новые имена';
+  String get namesProgressKnownHint => isKk
+      ? '3 дұрыс жауап және 2 қатарынан — есім үйренілді'
+      : '3 верных ответа и серия 2 — имя считается выученным';
 
   List<String> get weekdayShort => isKk
       ? const ['Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сб', 'Жс']
@@ -280,6 +290,9 @@ class AppStrings {
   String get remindersSubtitle => isKk
       ? 'Намаз және тәубе аяттары кездейсоқ уақытта'
       : 'Намазы и аяты о покаянии в случайное время';
+  String get azanSound => isKk ? 'Азан дауысы' : 'Звук азана';
+  String get azanSoundSystem => isKk ? 'Жүйелік' : 'Системный';
+  String get azanSoundAzan => isKk ? 'Азан' : 'Азан';
   String get allowNotifications => isKk
       ? 'Құрылғы баптауларында хабарламаларға рұқсат беріңіз'
       : 'Разрешите уведомления в настройках устройства';

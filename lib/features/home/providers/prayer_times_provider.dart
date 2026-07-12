@@ -50,6 +50,7 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
             official,
             disabledKeys: settings.disabledPrayerKeys,
             language: AppLanguage.fromCode(settings.appLanguageCode),
+            azan: settings.azanNotificationSound,
           ),
         );
       }
@@ -119,6 +120,7 @@ final prayerTimesProvider = FutureProvider<DailyPrayerTimes?>((ref) async {
         prayerTimes,
         disabledKeys: settings.disabledPrayerKeys,
         language: AppLanguage.fromCode(settings.appLanguageCode),
+        azan: settings.azanNotificationSound,
       ),
     );
   }

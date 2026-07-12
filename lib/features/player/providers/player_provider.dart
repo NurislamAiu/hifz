@@ -160,6 +160,15 @@ class PlayerController extends Notifier<PlayerViewState?> {
         unawaited(_handlePlaybackCompleted());
       }
     });
+    // Ayah-repeat plays the same source with LoopMode.one, which loops it
+    // gaplessly (no re-buffer, no bleed into the next ayah). just_audio reports
+    // each seamless loop-back as an autoAdvance discontinuity on the *same*
+    // index — that's our per-repeat tick.
+    _player.positionDiscontinuityStream.listen((d) {
+      if (d.reason != ja.PositionDiscontinuityReason.autoAdvance) return;
+      if (d.previousEvent.currentIndex != d.event.currentIndex) return;
+      _onAyahLooped();
+    });
 
     return null;
   }
@@ -295,20 +304,11 @@ class PlayerController extends Notifier<PlayerViewState?> {
     // the position the previous one ended on (e.g. starting Al-Baqarah at 7).
     if (index != s.currentIndex + 1 && !wrappedSurah) return;
 
-    if (index == s.currentIndex + 1 && s.loop.repeatsAyah) {
-      if (s.loop.infinite || s.repeatsRemaining > 1) {
-        state = s.copyWith(
-          repeatsRemaining: s.loop.infinite
-              ? s.repeatsRemaining
-              : s.repeatsRemaining - 1,
-          position: Duration.zero,
-        );
-        await _player.seek(Duration.zero, index: s.currentIndex);
-        if (s.isPlaying) {
-          await _player.play();
-        }
-        return;
-      }
+    if (index == s.currentIndex + 1 && s.loop.repeatsAyah && !s.loop.infinite) {
+      // The ayah finished all its repeats and playback advanced to the next one.
+      // Turn the repeat off so it doesn't carry over to the next ayah and the
+      // loop button/menu selection resets. (LoopMode was already set to off once
+      // only the final play remained.)
       loop = LoopSettings.off;
       repeatsRemaining = 0;
     }
@@ -346,17 +346,11 @@ class PlayerController extends Notifier<PlayerViewState?> {
     }
 
     if (s.loop.repeatsAyah) {
-      if (s.loop.infinite || s.repeatsRemaining > 1) {
-        state = s.copyWith(
-          repeatsRemaining: s.loop.infinite
-              ? s.repeatsRemaining
-              : s.repeatsRemaining - 1,
-        );
-        await _player.seek(Duration.zero);
-        await _player.play();
-        return;
-      }
+      // LoopMode.one loops the ayah gaplessly, so `completed` only fires once
+      // the last ayah of the surah has finished all its repeats. Clear the loop
+      // and continue like a normal end-of-surah.
       state = s.copyWith(loop: LoopSettings.off, repeatsRemaining: 0);
+      await _player.setLoopMode(ja.LoopMode.off);
     }
 
     await next();
@@ -457,15 +451,32 @@ class PlayerController extends Notifier<PlayerViewState?> {
   void setLoop(LoopSettings loop) {
     final s = state;
     if (s == null) return;
-    unawaited(
-      _player.setLoopMode(
-        loop.repeatsSurah ? ja.LoopMode.all : ja.LoopMode.off,
-      ),
-    );
+    final mode = loop.repeatsSurah
+        ? ja.LoopMode.all
+        : loop.repeatsAyah
+        ? ja.LoopMode.one
+        : ja.LoopMode.off;
+    unawaited(_player.setLoopMode(mode));
     state = s.copyWith(
       loop: loop,
       repeatsRemaining: loop.enabled && !loop.infinite ? loop.repeatCount : 0,
     );
+  }
+
+  /// One gapless loop-back of the currently repeating ayah just completed.
+  /// Counts down remaining repeats and, once only the final play is left,
+  /// stops looping so the player advances to the next ayah on its own.
+  void _onAyahLooped() {
+    final s = state;
+    if (s == null || !s.loop.repeatsAyah || s.loop.infinite) return;
+    final remaining = s.repeatsRemaining - 1;
+    state = s.copyWith(
+      repeatsRemaining: remaining < 0 ? 0 : remaining,
+      position: Duration.zero,
+    );
+    if (remaining <= 1) {
+      unawaited(_player.setLoopMode(ja.LoopMode.off));
+    }
   }
 
   int _repeatsRemainingAfterAyahChange(PlayerViewState s) {
@@ -474,6 +485,11 @@ class PlayerController extends Notifier<PlayerViewState?> {
   }
 
   Future<void> _seekToIndex(int index) async {
+    // Manual navigation may land while ayah-repeat is transiently off (during
+    // the final repeat) — restore gapless looping for the newly selected ayah.
+    if (state?.loop.repeatsAyah == true) {
+      await _player.setLoopMode(ja.LoopMode.one);
+    }
     await _player.seek(Duration.zero, index: index);
     _setKnownDuration(_durationForIndex(index) ?? _player.duration);
   }

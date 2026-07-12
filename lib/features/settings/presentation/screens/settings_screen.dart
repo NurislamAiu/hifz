@@ -1,7 +1,14 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart' as ja;
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -83,6 +90,8 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _NotificationsRow(),
+                  _RowDivider(),
+                  _AzanRow(),
                   _RowDivider(),
                   _RepentanceToneRow(),
                 ],
@@ -511,6 +520,7 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
           language: AppLanguage.fromCode(
             ref.read(settingsControllerProvider).appLanguageCode,
           ),
+          azan: ref.read(settingsControllerProvider).azanNotificationSound,
         );
       }
     } else {
@@ -547,6 +557,289 @@ class _NotificationsRowState extends ConsumerState<_NotificationsRow> {
               activeThumbColor: SoftPalette.primary,
         activeTrackColor: Colors.grey[100],
             ),
+    );
+  }
+}
+
+/// Prayer-notification sound picker. Tapping opens a sheet with two choices —
+/// system default or the azan — and re-schedules today's reminders so the new
+/// sound applies to the pending notifications right away.
+class _AzanRow extends ConsumerStatefulWidget {
+  const _AzanRow();
+
+  @override
+  ConsumerState<_AzanRow> createState() => _AzanRowState();
+}
+
+class _AzanRowState extends ConsumerState<_AzanRow> {
+  Future<void> _select(bool azan) async {
+    await ref
+        .read(settingsControllerProvider.notifier)
+        .setAzanNotificationEnabled(azan);
+
+    final settings = ref.read(settingsControllerProvider);
+    if (settings.notificationsEnabled ?? false) {
+      final prayerTimes = ref.read(prayerTimesProvider).valueOrNull;
+      if (prayerTimes != null) {
+        await ref
+            .read(notificationRepositoryProvider)
+            .scheduleTodayPrayerNotifications(
+              prayerTimes,
+              disabledKeys: settings.disabledPrayerKeys,
+              language: AppLanguage.fromCode(settings.appLanguageCode),
+              azan: azan,
+            );
+      }
+    }
+  }
+
+  Future<void> _openSheet() async {
+    final current = ref.read(settingsControllerProvider).azanNotificationSound;
+    final selected = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AzanSoundSheet(azanSelected: current),
+    );
+    if (selected != null && selected != current) {
+      await _select(selected);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final azan = ref.watch(
+      settingsControllerProvider.select((s) => s.azanNotificationSound),
+    );
+
+    return _SettingsRow(
+      icon: Iconsax.volume_high,
+      iconColor: SoftPalette.primary,
+      title: context.s.azanSound,
+      subtitle: azan ? context.s.azanSoundAzan : context.s.azanSoundSystem,
+      onTap: _openSheet,
+      trailing: const Icon(
+        Iconsax.arrow_right_3,
+        color: SoftPalette.textSecondary,
+        size: 18,
+      ),
+    );
+  }
+}
+
+/// Which preview, if any, is currently sounding in the picker sheet.
+enum _AzanPreview { none, system, azan }
+
+/// Bottom sheet letting the user pick the prayer-notification sound. Each option
+/// has a play button to hear it first. Pops `true` for azan, `false` for the
+/// system tone, or null when dismissed.
+class _AzanSoundSheet extends StatefulWidget {
+  const _AzanSoundSheet({required this.azanSelected});
+
+  final bool azanSelected;
+
+  @override
+  State<_AzanSoundSheet> createState() => _AzanSoundSheetState();
+}
+
+class _AzanSoundSheetState extends State<_AzanSoundSheet> {
+  final ja.AudioPlayer _player = ja.AudioPlayer();
+  final FlutterRingtonePlayer _ringtone = FlutterRingtonePlayer();
+  _AzanPreview _playing = _AzanPreview.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.playerStateStream.listen((st) {
+      if (st.processingState == ja.ProcessingState.completed && mounted) {
+        setState(() => _playing = _AzanPreview.none);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    unawaited(_ringtone.stop());
+    super.dispose();
+  }
+
+  Future<void> _previewAzan() async {
+    unawaited(_ringtone.stop());
+    if (_playing == _AzanPreview.azan) {
+      await _player.stop();
+      if (mounted) setState(() => _playing = _AzanPreview.none);
+      return;
+    }
+    setState(() => _playing = _AzanPreview.azan);
+    try {
+      // Route through the playback ("music") audio category so the azan is
+      // audible even with the iOS silent switch on — otherwise AVAudioPlayer
+      // stays muted while system sounds still play.
+      if (Platform.isIOS || Platform.isAndroid) {
+        final session = await AudioSession.instance;
+        await session.configure(const AudioSessionConfiguration.music());
+        await session.setActive(true);
+      }
+      await _player.setVolume(1.0);
+      // just_audio_background is active app-wide, so every source needs a
+      // MediaItem tag — a plain setAsset() would throw and swallow silently.
+      await _player.setAudioSource(
+        ja.AudioSource.asset(
+          'assets/audio/azan.mp3',
+          tag: MediaItem(id: 'azan-preview', title: 'Азан'),
+        ),
+      );
+      await _player.seek(Duration.zero);
+      unawaited(_player.play());
+    } catch (_) {
+      if (mounted) setState(() => _playing = _AzanPreview.none);
+    }
+  }
+
+  Future<void> _previewSystem() async {
+    await _player.stop();
+    setState(() => _playing = _AzanPreview.system);
+    unawaited(_ringtone.playNotification());
+    // The ringtone gives no completion callback and is short — clear the active
+    // state after a moment so the play icon returns.
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (mounted && _playing == _AzanPreview.system) {
+      setState(() => _playing = _AzanPreview.none);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    return Container(
+      decoration: const BoxDecoration(
+        color: SoftPalette.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: SoftPalette.track,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                s.azanSound,
+                style: AppTextStyles.title.copyWith(
+                  color: SoftPalette.textDark,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _AzanSoundOption(
+                label: s.azanSoundSystem,
+                selected: !widget.azanSelected,
+                playing: _playing == _AzanPreview.system,
+                onPreview: _previewSystem,
+                onSelect: () => Navigator.of(context).pop(false),
+              ),
+              const SizedBox(height: 10),
+              _AzanSoundOption(
+                label: s.azanSoundAzan,
+                selected: widget.azanSelected,
+                playing: _playing == _AzanPreview.azan,
+                onPreview: _previewAzan,
+                onSelect: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AzanSoundOption extends StatelessWidget {
+  const _AzanSoundOption({
+    required this.label,
+    required this.selected,
+    required this.playing,
+    required this.onPreview,
+    required this.onSelect,
+  });
+
+  final String label;
+  final bool selected;
+  final bool playing;
+  final VoidCallback onPreview;
+  final VoidCallback onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? SoftPalette.primary.withValues(alpha: 0.10)
+          : SoftPalette.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onSelect,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? SoftPalette.primary : SoftPalette.track,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Preview button — its own tap target so hearing the sound never
+              // also selects the option.
+              GestureDetector(
+                onTap: onPreview,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: SoftPalette.primary.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    playing ? Iconsax.pause : Iconsax.play,
+                    size: 18,
+                    color: SoftPalette.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.body.copyWith(
+                    color: SoftPalette.textDark,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (selected)
+                const Icon(
+                  Iconsax.tick_circle,
+                  size: 22,
+                  color: SoftPalette.primary,
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

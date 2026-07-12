@@ -64,6 +64,9 @@ class SettingsController extends Notifier<AppSettings> {
   Future<void> setNotificationsEnabled(bool enabled) =>
       _persist(state.copyWith(notificationsEnabled: enabled));
 
+  Future<void> setAzanNotificationEnabled(bool enabled) =>
+      _persist(state.copyWith(azanNotificationEnabled: enabled));
+
   Future<void> setRepentanceReminderTone(RepentanceReminderTone tone) =>
       _persist(state.copyWith(repentanceReminderTone: tone));
 
